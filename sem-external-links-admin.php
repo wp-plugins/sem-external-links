@@ -95,7 +95,7 @@ class external_links_admin
 				. ( $options['global'] ? ' checked="checked"' : '' )
 				. ' />'
 			. '&nbsp;'
-			. __('Process all outbound links as configured below. This means links in the sidebars, header, footer and so on in addition to those in posts\' and pages\' content. Note: If you add a nofollow attribute, be sure to turn this off if you wish to let your commenters to have some Google Juice.')
+			. __('Process all outbound links as configured below. This means links in the sidebars, header, footer and so on in addition to those in posts\' and pages\' content. Note: If you add a nofollow attribute, be sure to turn this off if you wish to let your commenters to have some Google Juice. Note: In the <a href="http://www.semiologic.com/software/wp-themes/">Semiologic Reloaded theme</a>, icons are not added outside of the main area.')
 			. '</label>'
 			. '</td>'
 			. '</tr>';
