@@ -1,11 +1,13 @@
 <?php
 /*
 Plugin Name: External Links
-Plugin URI: http://www.semiologic.com/software/publishing/external-links/
-Description: Adds a class=&quot;external&quot; to all outbound links, with various effects that are configurable under Options / External Links. Use &lt;a class=&quot;no_icon&quot; ...&gt; to disable the icon on individual links.
+Plugin URI: http://www.semiologic.com/software/external-links/
+Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
+Version: 4.0
 Author: Denis de Bernardy
-Version: 3.0.4
 Author URI: http://www.getsemiologic.com
+Text Domain: external-links
+Domain Path: /lang
 */
 
 /*
@@ -18,378 +20,224 @@ http://www.opensource.org/licenses/gpl-2.0.php
 **/
 
 
-class external_links
-{
-	#
-	# init()
-	#
+load_plugin_textdomain('external-links', false, dirname(plugin_basename(__FILE__)) . '/lang');
+
+
+/**
+ * external_links
+ *
+ * @package External Links
+ **/
+
+class external_links {
+	/**
+	 * styles()
+	 *
+	 * @return void
+	 **/
+
+	function styles() {
+		$folder = plugin_dir_url(__FILE__);
+		wp_enqueue_style('external-links', $folder . 'sem-external-links.css', null, '20090903');
+	} # styles()
 	
-	function init()
-	{
-		add_action('wp_head', array('external_links', 'wp_head'));
+	
+	/**
+	 * filter()
+	 *
+	 * @param array $anchor
+	 * @return array $anchor
+	 **/
+
+	function filter($anchor) {
+		# ignore local urls
+		if ( external_links::is_local_url($anchor['attr']['href']) )
+			return $anchor;
 		
-		add_action('the_content', array('external_links', 'filter'), 40);
-		add_action('the_excerpt', array('external_links', 'filter'), 40);
-	} # init()
-	
-	
-	#
-	# get_options()
-	#
-	
-	function get_options()
-	{
-		if ( ( $o = get_option('sem_external_links_params') ) === false )
-		{
-			$o = array(
-				'global' => true,
-				'add_css' => true,
-				'add_target' => false,
-				'add_nofollow' => false,
-				);
-			
-			update_option('sem_external_links_params', $o);
+		# ignore links on images
+		if ( preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']) )
+			return $anchor;
+		
+		$o = external_links::get_options();
+		
+		if ( !in_array('external', $anchor['attr']['class']) )
+			$anchor['attr']['class'][] = 'external';
+		
+		if ( $o['icon'] && !in_array('external_icon', $anchor['attr']['class'])
+			&& !in_array('no_icon', $anchor['attr']['class']) && !in_array('noicon', $anchor['attr']['class']) )
+			$anchor['attr']['class'][] = 'external_icon';
+		
+		if ( $o['nofollow'] && !function_exists('strip_nofollow')
+			&& !in_array('nofollow', $anchor['attr']['rel']) && !in_array('follow', $anchor['attr']['rel']) )
+			$anchor['attr']['rel'][] = 'nofollow';
+		
+		if ( $o['target'] ) {
+			if ( empty($anchor['attr']['onclick']) ) {
+				$anchor['attr']['onclick'] = 'window.open(this.href); return false;';
+			} else {
+				$anchor['attr']['onclick'] = 'window.open(this.href); '
+					. rtrim($anchor['attr']['onclick'], ';') . '; '
+					. 'return false;';
+			}
 		}
+		
+		return $anchor;
+	} # filter()
+	
+	
+	/**
+	 * is_local_url()
+	 *
+	 * @param string $url
+	 * @return bool $is_local_url
+	 **/
+
+	function is_local_url($url) {
+		if ( in_array(substr($url, 0, 1), array('?', '#')) || strpos($url, '://') === false )
+			return true;
+		
+		static $site_domain;
+		
+		if ( !isset($site_domain) ) {
+			$site_domain = get_option('home');
+			$site_domain = parse_url($site_domain);
+			$site_domain = $site_domain['host'];
+			$site_domain = preg_replace("/^www\./i", '', $site_domain);
+			
+			# The following is not bullet proof, but it's good enough for a WP site
+			if ( $site_domain != 'localhost' && !preg_match("/\d+(\.\d+){3}/", $site_domain) ) {
+				if ( preg_match("/\.([^.]+)$/", $site_domain, $tld) ) {
+					$tld = end($tld);
+				} else {
+					$site_domain = false;
+					return false;
+				}
+				
+				$site_domain = substr($site_domain, 0, strlen($site_domain) - 1 - strlen($tld));
+				
+				if ( preg_match("/\.([^.]+)$/", $site_domain, $subtld) ) {
+					$subtld = end($subtld);
+					if ( strlen($subtld) <= 4 ) {
+						$site_domain = substr($site_domain, 0, strlen($site_domain) - 1 - strlen($subtld));
+						$site_domain = explode('.', $site_domain);
+						$site_domain = array_pop($site_domain);
+						$site_domain .= ".$subtld";
+					} else {
+						$site_domain = $subtld;
+					}
+				}
+				
+				$site_domain .= ".$tld";
+			}
+		}
+		
+		if ( !$site_domain )
+			return false;
+		
+		$link_domain = parse_url($url);
+		$link_domain = $link_domain['host'];
+		$link_domain = preg_replace("/^www\./i", '', $link_domain);
+		
+		if ( $site_domain == $link_domain ) {
+			return true;
+		} else {
+			$site_elts = explode('.', $site_domain);
+			$link_elts = explode('.', $link_domain);
+			
+			while ( ( $site_elt = array_pop($site_elts) ) && ( $link_elt = array_pop($link_elts) ) ) {
+				if ( $site_elt !== $link_elt )
+					return false;
+			}
+			
+			return !empty($link_elts);
+		}
+	} # is_local_url()
+	
+	
+	/**
+	 * get_options
+	 *
+	 * @return array $options
+	 **/
+
+	function get_options() {
+		static $o;
+		
+		if ( !is_admin() && isset($o) )
+			return $o;
+		
+		$o = get_option('external_links');
+		
+		if ( $o === false )
+			$o = external_links::init_options();
 		
 		return $o;
 	} # get_options()
 	
 	
-	#
-	# wp_head()
-	#
-	
-	function wp_head()
-	{
-		$options = external_links::get_options();
+	/**
+	 * init_options()
+	 *
+	 * @return array $options
+	 **/
 
-		if ( $options['add_css'] )
-		{
-			echo '<link rel="stylesheet" type="text/css"'
-				. ' href="'
-					. trailingslashit(get_option('siteurl'))
-					. 'wp-content/plugins/sem-external-links/sem-external-links.css?ver=3.0'
-					. '"'
-				. ' />' . "\n";
-		}
+	function init_options() {
+		$o = get_option('sem_external_links_params');
 		
-		if ( $options['global'] )
-		{
-			remove_action('the_content', array('external_links', 'filter'), 40);
-			remove_action('the_excerpt', array('external_links', 'filter'), 40);
-			
-			$GLOBALS['did_external_links'] = false;
-			ob_start(array('external_links', 'filter'));
-			add_action('wp_footer', array('external_links', 'ob_flush'), 1000000000);
-		}
-	} # wp_head()
-	
-	
-	#
-	# filter()
-	#
-	
-	function filter($buffer)
-	{
-		# escape head
-		$buffer = preg_replace_callback(
-			"/
-			^.*
-			<\s*\/\s*head\s*>		# everything up to where the body starts
-			/isUx",
-			array('external_links', 'escape'),
-			$buffer
-			);
-
-		# escape scripts
-		$buffer = preg_replace_callback(
-			"/
-			<\s*script				# script tag
-				(?:\s[^>]*)?		# optional attributes
-				>
-			.*						# script code
-			<\s*\/\s*script\s*>		# end of script tag
-			/isUx",
-			array('external_links', 'escape'),
-			$buffer
-			);
-
-		# escape objects
-		$buffer = preg_replace_callback(
-			"/
-			<\s*object				# object tag
-				(?:\s[^>]*)?		# optional attributes
-				>
-			.*						# object code
-			<\s*\/\s*object\s*>		# end of object tag
-			/isUx",
-			array('external_links', 'escape'),
-			$buffer
-			);
-
-		global $site_host;
-
-		$site_host = trailingslashit(get_option('home'));
-		$site_host = preg_replace("~^https?://~i", "", $site_host);
-		$site_host = preg_replace("~^www\.~i", "", $site_host);
-		$site_host = preg_replace("~/.*$~", "", $site_host);
-
-		$buffer = preg_replace_callback(
-			"/
-			<\s*a					# ancher tag
-				(?:\s[^>]*)?		# optional attributes
-				\s*href\s*=\s*		# href=...
-				(
-					\"[^\"]*\"		# double quoted link
-				|
-					'[^']*'			# single quoted link
-				|
-					[^'\"]\S*		# non-quoted link
-				)
-				(?:\s[^>]*)?		# optional attributes
-				\s*>
-			/isUx",
-			array('external_links', 'filter_callback'),
-			$buffer
-			);
-
-		# unescape anchors
-		$buffer = external_links::unescape($buffer);
+		if ( $o !== false )
+			delete_option('sem_external_links_params');
 		
-		$GLOBALS['did_external_links'] = true;
-
-		return $buffer;
-	} # filter()
-	
-	
-	#
-	# filter_callback()
-	#
-	
-	function filter_callback($input)
-	{
-		global $site_host;
-
-		$anchor = $input[0];
-		$link = $input[1];
-
-	#	echo '<pre>';
-	#	var_dump(
-	#		get_option('sem_external_links_params'),
-	#		htmlspecialchars($link),
-	#		htmlspecialchars($anchor)
-	#		);
-	#	echo '</pre>';
-
-		if ( ( strpos($link, '://') !== false
-				&& !preg_match(
-					"/
-						https?:\/\/
-						(?:www\.)?
-						" . str_replace('.', '\.', $site_host) . "
-					/ix",
-					$link
-					)
-				)
-			|| preg_match("/
-					\/
-					(?:go|get)
-					(?:\.|\/)
-					/ix",
-					$link
-					)
-			)
-		{
-			$options = get_option('sem_external_links_params');
-
-			if ( $options['add_css'] )
-			{
-				if ( preg_match(
-					"/
-						\s
-						class\s*=\s*
-						(?:
-							\"([^\"]*)\"
-						|
-							'([^']*)'
-						|
-							([^\"'][^\s>]*)
-						)
-					/iUx",
-					$anchor,
-					$match
-					) )
-				{
-					#echo '<pre>';
-					#var_dump($match);
-					#echo '</pre>';
-
-					if ( !preg_match(
-						"/
-							\b
-							(?:
-								no_?icon
-							|
-								external
-							)
-							\b
-						/ix",
-						$match[1]
-						) )
-					{
-						$anchor = str_replace(
-							$match[0],
-							' class="' . $match[1] . ' external"',
-							$anchor
-							);
-					}
-				}
-				else
-				{
-					$anchor = str_replace(
-						'>',
-						' class="external">',
-						$anchor
-						);
-				}
-			}
-
-			if ( $options['add_target'] )
-			{
-				if ( !preg_match(
-					"/
-						\s
-						target\s*=
-					/iUx",
-					$anchor
-					) )
-				{
-					$anchor = str_replace(
-						'>',
-						' target="_blank">',
-						$anchor
-						);
-				}
-			}
-
-			if ( $options['add_nofollow'] )
-			{
-				if ( preg_match(
-					"/
-						\s
-						rel\s*=\s*
-						(?:
-							\"([^\"]*)\"
-						|
-							'([^']*)'
-						|
-							([^\"'][^\s>]*)
-						)
-					/iUx",
-					$anchor,
-					$match
-					) )
-				{
-					#echo '<pre>';
-					#var_dump($match);
-					#echo '</pre>';
-
-					if ( !preg_match(
-						"/
-							\b
-							(?:
-								nofollow
-							|
-								follow
-							)
-							\b
-						/ix",
-						$match[1]
-						) )
-					{
-						$anchor = str_replace(
-							$match[0],
-							' rel="' . $match[1] . ' nofollow"',
-							$anchor
-							);
-					}
-				}
-				else
-				{
-					$anchor = str_replace(
-						'>',
-						' rel="nofollow">',
-						$anchor
-						);
-				}
-			}
-		}
-
-		return $anchor;
-	} # filter_callback()
-	
-	
-	#
-	# escape()
-	#
-
-	function escape($input)
-	{
-		global $escaped_external_links;
-
-		#echo '<pre>';
-		#var_dump($input);
-		#echo '</pre>';
-
-		$tag_id = '--escaped_external_link:' . md5($input[0]) . '--';
-		$escaped_external_links[$tag_id] = $input[0];
-
-		return $tag_id;
-	} # escape()
-	
-	
-	#
-	# unescape()
-	#
-
-	function unescape($input)
-	{
-		global $escaped_external_links;
-
-		$find = array();
-		$replace = array();
-
-		foreach ( (array) $escaped_external_links as $key => $val )
-		{
-			$find[] = $key;
-			$replace[] = $val;
-		}
-
-		return str_replace($find, $replace, $input);
-	} # unescape()
-	
-	
-	#
-	# ob_flush()
-	#
-	
-	function ob_flush()
-	{
-		$i = 0;
+		$o = wp_parse_args($o, array(
+			'global' => true,
+			'icon' => true,
+			'target' => false,
+			'nofollow' => false,
+			));
 		
-		while ( !$GLOBALS['did_external_links'] && $i++ < 100 )
-		{
-			@ob_end_flush();
-		}
-	} # ob_flush()
+		update_option('external_links', $o);
+		
+		return $o;
+	} # init_options()
+	
+	
+	/**
+	 * admin_menu()
+	 *
+	 * @return void
+	 **/
+	
+	function admin_menu() {
+		add_options_page(
+			__('External Links', 'external-links'),
+			__('External Links', 'external-links'),
+			'manage_options',
+			'external-links',
+			array('external_links_admin', 'edit_options')
+			);
+	} # admin_menu()
 } # external_links
 
-external_links::init();
 
-
-# include admin stuff when relevant
-if ( is_admin() )
-{
+function external_links_admin() {
 	include dirname(__FILE__) . '/sem-external-links-admin.php';
+}
+
+add_action('load-settings_page_external-links', 'external_links_admin');
+
+
+if ( !is_admin() ) {
+	if ( !class_exists('anchor_utils') )
+		include dirname(__FILE__) . '/anchor-utils/anchor-utils.php';
+	
+	$o = external_links::get_options();
+	
+	if ( $o['icon'] )
+		add_action('wp_print_styles', array('external_links', 'styles'), 5);
+	
+	add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array('external_links', 'filter'));
+	
+	unset($o);
+} else {
+	add_action('admin_menu', array('external_links', 'admin_menu'));
 }
 ?>

@@ -1,157 +1,144 @@
 <?php
+/**
+ * external_links_admin
+ *
+ * @package External Links
+ **/
 
-class external_links_admin
-{
-	#
-	# init()
-	#
+class external_links_admin {
+	/**
+	 * save_options()
+	 *
+	 * @return void
+	 **/
 	
-	function init()
-	{
-		add_action('admin_menu', array('external_links_admin', 'admin_menu'));
-	} # init()
-	
-
-	#
-	# update_options()
-	#
-
-	function update_options()
-	{
+	function save_options() {
+		if ( !$_POST || !current_user_can('manage_options') )
+			return;
+		
 		check_admin_referer('external_links');
-
-		#echo '<pre>';
-		#var_dump($_POST['sem_external_links']);
-		#echo '</pre>';
-
-		$options = $_POST['sem_external_links'];
-		$options['global'] = isset($options['global']);
-		$options['add_css'] = isset($options['add_css']);
-		$options['add_target'] = isset($options['add_target']);
-		$options['add_nofollow'] = isset($options['add_nofollow']);
-
-		update_option('sem_external_links_params', $options);
-	} # update_options()
-
-
-	#
-	# admin_menu()
-	#
-
-	function admin_menu()
-	{
-		add_options_page(
-				__('External&nbsp;Links'),
-				__('External&nbsp;Links'),
-				'manage_options',
-				__FILE__,
-				array('external_links_admin', 'admin_page')
-				);
-	} # admin_menu()
+		
+		foreach ( array('global', 'icon', 'target', 'nofollow') as $var )
+			$$var = isset($_POST[$var]);
+		
+		update_option('external_links', compact('global', 'icon', 'target', 'nofollow'));
+		
+		echo "<div class=\"updated fade\">\n"
+			. "<p>"
+				. "<strong>"
+				. __('Settings saved.', 'external-links')
+				. "</strong>"
+			. "</p>\n"
+			. "</div>\n";
+	} # save_options()
 	
+	
+	/**
+	 * edit_options()
+	 *
+	 * @return void
+	 **/
+	
+	function edit_options() {
+		echo '<div class="wrap">' . "\n"
+			. '<form method="post" action="">';
 
-	#
-	# admin_page()
-	#
-
-	function admin_page()
-	{
-		# Acknowledge update
-
-		if ( isset($_POST['update_sem_external_links_options'])
-			&& $_POST['update_sem_external_links_options']
-			)
-		{
-			external_links_admin::update_options();
-
-			echo "<div class=\"updated\">\n"
+		wp_nonce_field('external_links');
+		
+		$options = external_links::get_options();
+		
+		if ( $options['nofollow'] && function_exists('strip_nofollow') ) {
+			echo "<div class=\"error\">\n"
 				. "<p>"
-					. "<strong>"
-					. __('Settings saved.')
-					. "</strong>"
+					. __('Note: Your rel=nofollow preferences is being ignored because the dofollow plugin is enabled on your site.', 'external-links')
 				. "</p>\n"
 				. "</div>\n";
 		}
-
-		$options = get_option('sem_external_links_params');
-
-		# show controls
-
-		echo "<div class=\"wrap\">\n"
-			. "<h2>" . __('External Links Settings') . "</h2>\n"
-			. "<form method=\"post\" action=\"\">\n";
-
-		if ( function_exists('wp_nonce_field') ) wp_nonce_field('external_links');
-
-		echo '<input type="hidden" name="update_sem_external_links_options" value="1">';
-
-		echo '<table class="form-table">';
-
-		echo '<tr>'
+		
+		screen_icon();
+		
+		echo '<h2>' . __('External Links Settings', 'external-links') . '</h2>' . "\n";
+		
+		echo '<table class="form-table">' . "\n";
+		
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Apply Globally', 'external-links')
+			. '</th>' . "\n"
 			. '<td>'
-			. '<label for="sem_external_links[global]">'
-			. '<input type="checkbox"'
-				. ' name="sem_external_links[global]" id="sem_external_links[global]"'
-				. ( $options['global'] ? ' checked="checked"' : '' )
+			. '<label>'
+			. '<input type="checkbox" name="global"'
+				. checked($options['global'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Process all outbound links as configured below. This means links in the sidebars, header, footer and so on in addition to those in posts\' and pages\' content. Note: If you add a nofollow attribute, be sure to turn this off if you wish to let your commenters to have some Google Juice. Note: In the <a href="http://www.semiologic.com/software/wp-themes/">Semiologic Reloaded theme</a>, icons are not added outside of the main area.')
+			. __('Apply these settings to all outbound links, including those in sidebars, rather than to those in posts and comments.', 'external-links')
 			. '</label>'
-			. '</td>'
-			. '</tr>';
-
-		echo '<tr>'
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+		
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Add Icons', 'external-links')
+			. '</th>' . "\n"
 			. '<td>'
-			. '<label for="sem_external_links[add_css]">'
-			. '<input type="checkbox"'
-				. ' name="sem_external_links[add_css]" id="sem_external_links[add_css]"'
-				. ( $options['add_css'] ? ' checked="checked"' : '' )
+			. '<label>'
+			. '<input type="checkbox" name="icon"'
+				. checked($options['icon'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Add an external link icon to outbound links. You can use a class="noicon" attribute on individual links to override this.')
+			. __('Mark outbound links with an icon.', 'external-links')
 			. '</label>'
-			. '</td>'
-			. '</tr>';
-
-		echo '<tr>'
+			. '<br />' . "\n"
+			. __('Note: You can override this behavior by adding a class="no_icon" to individual links.', 'external-links')
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+		
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Add No Follow', 'external-links')
+			. '</th>' . "\n"
 			. '<td>'
-			. '<label for="sem_external_links[add_target]">'
-			. '<input type="checkbox"'
-				. ' name="sem_external_links[add_target]" id="sem_external_links[add_target]"'
-				. ( $options['add_target'] ? ' checked="checked"' : '' )
+			. '<label>'
+			. '<input type="checkbox" name="nofollow"'
+				. checked($options['nofollow'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Open outbound links in new windows. Some usability experts suggest <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitor\'s trust</a> towards your site. Others highlight that some users (mainly elderly) do not know how to use the back button and encourage the practice.')
+			. __('Add a rel=nofollow attribute to outbound links.', 'external-links')
 			. '</label>'
-			. '</td>'
-			. '</tr>';
-
-		echo '<tr>'
+			. '<br />' . "\n"
+			. __('Note: You can override this behavior by adding a rel="follow" to individual links.', 'external-links')
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+		
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Open in New Windows', 'external-links')
+			. '</th>' . "\n"
 			. '<td>'
-			. '<label for="sem_external_links[add_nofollow]">'
-			. '<input type="checkbox"'
-				. ' name="sem_external_links[add_nofollow]" id="sem_external_links[add_nofollow]"'
-				. ( $options['add_nofollow'] ? ' checked="checked"' : '' )
+			. '<label>'
+			. '<input type="checkbox" name="target"'
+				. checked($options['target'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Add rel=nofollow to outbound links. This is not very nice for those you\'re linking to.')
+			. __('Open outbound links in new windows.', 'external-links')
 			. '</label>'
-			. '</td>'
-			. '</tr>';
-
-		echo '</table>';
-
+			. '<br />' . "\n"
+			. __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitor\'s trust</a> towards your site. Others highlight that some users (mainly elderly) do not know how to use the back button and encourage the practice.', 'external-links')
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+		
+		echo '</table>' . "\n";
+		
 		echo '<p class="submit">'
 			. '<input type="submit"'
-				. ' value="' . attribute_escape(__('Save Changes')) . '"'
+				. ' value="' . esc_attr(__('Save Changes', 'external-links')) . '"'
 				. ' />'
-			. '</p>';
-
-		echo '</form>'
-			. '</div>';
-	} # admin_page()
+			. '</p>' . "\n";
+		
+		echo '</form>' . "\n"
+			. '</div>' . "\n";
+	} # edit_options()
 } # external_links_admin
 
-external_links_admin::init();
-
+add_action('settings_page_external-links', array('external_links_admin', 'save_options'), 0);
 ?>
