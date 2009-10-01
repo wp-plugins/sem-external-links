@@ -35,6 +35,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 4.0.1 =
+
+- Ignore case when comparing domains
+
 = 4.0 =
 
 - Allow to force a follow when the nofollow option is toggled
