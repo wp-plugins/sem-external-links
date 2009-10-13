@@ -35,6 +35,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 4.0.2 =
+
+- Don't enforce new window pref in feeds
+
 = 4.0.1 =
 
 - Ignore case when comparing domains

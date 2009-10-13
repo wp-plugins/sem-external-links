@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 4.0.1
+Version: 4.0.2
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -71,7 +71,7 @@ class external_links {
 			&& !in_array('nofollow', $anchor['attr']['rel']) && !in_array('follow', $anchor['attr']['rel']) )
 			$anchor['attr']['rel'][] = 'nofollow';
 		
-		if ( $o['target'] ) {
+		if ( $o['target'] && !is_feed() ) {
 			if ( empty($anchor['attr']['onclick']) ) {
 				$anchor['attr']['onclick'] = 'window.open(this.href); return false;';
 			} else {
