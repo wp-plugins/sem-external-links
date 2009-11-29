@@ -34,6 +34,13 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 4.0.3 =
+
+- Improve case-insensitive handling of domains
+- Improve image handling
+- Switch back to using a target attribute: work around double windows getting opened in Vista/IE7
+- Disable entirely in feeds
+
 = 4.0.2 =
 
 - Don't enforce new window pref in feeds

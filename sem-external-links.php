@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 4.0.2
+Version: 4.0.3
 Author: Denis de Bernardy
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -50,36 +50,34 @@ class external_links {
 	 **/
 
 	function filter($anchor) {
+		# disable in feeds
+		if ( is_feed() )
+			return $anchor;
+		
 		# ignore local urls
 		if ( external_links::is_local_url($anchor['attr']['href']) )
 			return $anchor;
 		
-		# ignore links on images
-		if ( preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']) )
-			return $anchor;
+		# no icons for images
+		$is_image = (bool) preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']);
 		
 		$o = external_links::get_options();
 		
 		if ( !in_array('external', $anchor['attr']['class']) )
 			$anchor['attr']['class'][] = 'external';
 		
-		if ( $o['icon'] && !in_array('external_icon', $anchor['attr']['class'])
-			&& !in_array('no_icon', $anchor['attr']['class']) && !in_array('noicon', $anchor['attr']['class']) )
+		if ( !$is_image && $o['icon'] && !in_array('external_icon', $anchor['attr']['class'])
+			&& !in_array('no_icon', $anchor['attr']['class'])
+			&& !in_array('noicon', $anchor['attr']['class']) )
 			$anchor['attr']['class'][] = 'external_icon';
 		
 		if ( $o['nofollow'] && !function_exists('strip_nofollow')
-			&& !in_array('nofollow', $anchor['attr']['rel']) && !in_array('follow', $anchor['attr']['rel']) )
+			&& !in_array('nofollow', $anchor['attr']['rel'])
+			&& !in_array('follow', $anchor['attr']['rel']) )
 			$anchor['attr']['rel'][] = 'nofollow';
 		
-		if ( $o['target'] && !is_feed() ) {
-			if ( empty($anchor['attr']['onclick']) ) {
-				$anchor['attr']['onclick'] = 'window.open(this.href); return false;';
-			} else {
-				$anchor['attr']['onclick'] = 'window.open(this.href); '
-					. rtrim($anchor['attr']['onclick'], ';') . '; '
-					. 'return false;';
-			}
-		}
+		if ( $o['target'] && empty($anchor['attr']['target']) )
+		 	$anchor['attr']['target'] = '_blank';
 		
 		return $anchor;
 	} # filter()
@@ -95,6 +93,8 @@ class external_links {
 	function is_local_url($url) {
 		if ( in_array(substr($url, 0, 1), array('?', '#')) || strpos($url, '://') === false )
 			return true;
+		elseif ( preg_match("~/go(/|\.)~i", $url) )
+			return false;
 		
 		static $site_domain;
 		
@@ -129,6 +129,8 @@ class external_links {
 				
 				$site_domain .= ".$tld";
 			}
+			
+			$site_domain = strtolower($site_domain);
 		}
 		
 		if ( !$site_domain )
@@ -137,6 +139,7 @@ class external_links {
 		$link_domain = parse_url($url);
 		$link_domain = $link_domain['host'];
 		$link_domain = preg_replace("/^www\./i", '', $link_domain);
+		$link_domain = strtolower($link_domain);
 		
 		if ( $site_domain == $link_domain ) {
 			return true;
@@ -145,11 +148,11 @@ class external_links {
 			$link_elts = explode('.', $link_domain);
 			
 			while ( ( $site_elt = array_pop($site_elts) ) && ( $link_elt = array_pop($link_elts) ) ) {
-				if ( strtolower($site_elt) !== strtolower($link_elt) )
+				if ( $site_elt !== $link_elt )
 					return false;
 			}
 			
-			return !empty($link_elts);
+			return empty($link_elts) || empty($site_elts);
 		}
 	} # is_local_url()
 	
