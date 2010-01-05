@@ -2,8 +2,13 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy <http://www.mesoconcepts.com>
- * Version: 1.0
+ * Version: 1.0.1
  */
+
+if ( @ini_get('pcre.backtrack_limit') <= 750000 )
+	@ini_set('pcre.backtrack_limit', 750000);
+if ( @ini_get('pcre.recursion_limit') <= 250000 )
+	@ini_set('pcre.recursion_limit', 250000);
 
 /**
  * anchor_utils
