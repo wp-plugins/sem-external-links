@@ -123,7 +123,7 @@ class external_links_admin {
 			. __('Open outbound links in new windows.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitor\'s trust</a> towards your site. Others highlight that some users (mainly elderly) do not know how to use the back button and encourage the practice.', 'external-links')
+			. __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitors\' trust</a> towards your site. Others highlight that computer-illiterate users do not always know how to use the back button, and encourage the practice for that reason.', 'external-links')
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 		

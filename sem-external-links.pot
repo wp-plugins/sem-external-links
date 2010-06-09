@@ -1,14 +1,14 @@
 # External Links pot file.
-# Copyright (C) 2009 Mesoconcepts <http://www.mesoconcepts.com>
+# Copyright (C) 2010 Mesoconcepts <http://www.mesoconcepts.com>
 # This file is distributed under the same license as the External Links package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 4.0\n"
+"Project-Id-Version: 4.0.5\n"
 "Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2009-09-16 15:38+0200\n"
+"POT-Creation-Date: 2010-05-13 16:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -79,17 +79,18 @@ msgstr ""
 #: sem-external-links-admin.php:126
 msgid ""
 "Note: Some usability experts discourage this, claiming that <a href=\"http://"
-"www.useit.com/alertbox/9605.html\">this can damage your visitor's trust</a> "
-"towards your site. Others highlight that some users (mainly elderly) do not "
-"know how to use the back button and encourage the practice."
+"www.useit.com/alertbox/9605.html\">this can damage your visitors' trust</a> "
+"towards your site. Others highlight that computer-illiterate users do not "
+"always know how to use the back button, and encourage the practice for that "
+"reason."
 msgstr ""
 
 #: sem-external-links-admin.php:134
 msgid "Save Changes"
 msgstr ""
 
-#: sem-external-links-info.php:2 sem-external-links.php:211
-#: sem-external-links.php:212
+#: sem-external-links-info.php:2 sem-external-links.php:216
+#: sem-external-links.php:217
 msgid "External Links"
 msgstr ""
 
