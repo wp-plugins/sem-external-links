@@ -34,6 +34,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 4.0.6 =
+
+- WP 3.0.1 compat
+
 = 4.0.5 =
 
 - WP 3.0 compat
