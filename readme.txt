@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.0
+Tested up to: 3.1
 
 The external links plugin for WordPress lets you process outgoing links differently from internal links.
 
