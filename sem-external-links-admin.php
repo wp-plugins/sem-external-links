@@ -6,7 +6,14 @@
  **/
 
 class external_links_admin {
-	/**
+    /**
+     * external_links_admin()
+     */
+    function external_links_admin() {
+        add_action('settings_page_external-links', array($this, 'save_options'), 0);
+    }
+
+    /**
 	 * save_options()
 	 *
 	 * @return void
@@ -39,7 +46,7 @@ class external_links_admin {
 	 * @return void
 	 **/
 	
-	function edit_options() {
+	static function edit_options() {
 		echo '<div class="wrap">' . "\n"
 			. '<form method="post" action="">';
 
@@ -140,5 +147,5 @@ class external_links_admin {
 	} # edit_options()
 } # external_links_admin
 
-add_action('settings_page_external-links', array('external_links_admin', 'save_options'), 0);
+$external_links_admin = new external_links_admin();
 ?>

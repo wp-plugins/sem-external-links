@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.5.1
+Tested up to: 3.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,15 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 
 == Change Log ==
+
+= 4.2 =
+
+- WP 3.6 compat
+- PHP 5.4 compat
+- Fixed issue with parsing of links with non-standard (class, href, rel, target) attributes included in the <a> tag.  This caused Twitter Widgets to break.
+- Fixed issue where the external link icon was not added if the url specified by href had a preceding space  href=" http://www.example.com"
+- Fixed issue with links containing onClick (or other javascript event) attributes with embedded javascript code.  WordPress' Threaded Comments does this
+- Fixed issue with 2 spaces being injected between <a and class/href/rel/etc.   i.e   <a  href="http://example.com">
 
 = 4.1 =
 

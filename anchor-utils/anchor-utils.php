@@ -1,8 +1,8 @@
 <?php
 /*
  * Anchor Utils
- * Author: Denis de Bernardy <http://www.mesoconcepts.com>
- * Version: 1.1
+ * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
+ * Version: 1.2
  */
 
 if ( @ini_get('pcre.backtrack_limit') <= 750000 )
@@ -17,7 +17,19 @@ if ( @ini_get('pcre.recursion_limit') <= 250000 )
  **/
 
 class anchor_utils {
-	/**
+    /**
+     * anchor_utils
+     */
+    function anchor_utils() {
+        add_filter('the_content', array($this, 'filter'), 100);
+        add_filter('the_excerpt', array($this, 'filter'), 100);
+        add_filter('widget_text', array($this, 'filter'), 100);
+        add_filter('comment_text', array($this, 'filter'), 100);
+
+        add_action('wp_head', array($this, 'ob_start'), 10000);
+    } #anchor_utils
+
+    /**
 	 * ob_start()
 	 *
 	 * @return void
@@ -30,12 +42,11 @@ class anchor_utils {
 			return;
 		
 		if ( has_filter('ob_filter_anchor') ) {
-			ob_start(array('anchor_utils', 'ob_filter'));
-			add_action('wp_footer', array('anchor_utils', 'ob_flush'), 10000);
+			ob_start(array($this, 'ob_filter'));
+			add_action('wp_footer', array($this, 'ob_flush'), 10000);
 			$done = true;
 		}
 	} # ob_start()
-	
 	
 	/**
 	 * ob_filter()
@@ -56,7 +67,7 @@ class anchor_utils {
 			>
 			(.+?)
 			<\s*\/\s*a\s*>
-			/isx", array('anchor_utils', 'ob_filter_callback'), $text);
+			/isx", array($this, 'ob_filter_callback'), $text);
 		
 		$text = anchor_utils::unescape($text);
 		
@@ -70,7 +81,7 @@ class anchor_utils {
 	 * @return void
 	 **/
 
-	function ob_flush() {
+	static function ob_flush() {
 		static $done = true;
 		
 		if ( $done )
@@ -129,7 +140,7 @@ class anchor_utils {
 			>
 			(.+?)
 			<\s*\/\s*a\s*>
-			/isx", array('anchor_utils', 'filter_callback'), $text);
+			/isx", array($this, 'filter_callback'), $text);
 		
 		$text = anchor_utils::unescape($text);
 		
@@ -171,11 +182,16 @@ class anchor_utils {
 	 **/
 
 	function parse_anchor($match) {
+
+        // Fix links that have javascript onClick or similar code but uses ="  " rather than ='  ".  Messes up attribute extraction especially for threaded comments
+        $on_patterns = '/(onClick|onMouseOver|onMouseOut|onMouseDown|onMouseUp|onDblClick|onContextMenu|onLoad|onAbort|onError)="(.+?)"/iU';
+        $match[1] = preg_replace($on_patterns, "$1='$2'", $match[1]);
+
 		$anchor = array();
 		$anchor['attr'] = shortcode_parse_atts($match[1]);
-		
+
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
-			|| $anchor['attr']['href'] != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
+			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
 			return false;
 		
 		foreach ( array('class', 'rel') as $attr ) {
@@ -194,7 +210,7 @@ class anchor_utils {
 		return $anchor;
 	} # parse_anchor()
 	
-	
+
 	/**
 	 * build_anchor()
 	 *
@@ -205,14 +221,17 @@ class anchor_utils {
 	function build_anchor($anchor) {
 		$anchor['attr']['href'] = esc_url($anchor['attr']['href']);
 		
-		$str = '<a ';
+		$str = '<a';
 		foreach ( $anchor['attr'] as $k => $v ) {
 			if ( is_array($v) ) {
 				$v = array_unique($v);
 				if ( $v )
 					$str .= ' ' . $k . '="' . implode(' ', $v) . '"';
 			} else {
-				$str .= ' ' . $k . '="' . $v . '"';
+               if ($k)
+				    $str .= ' ' . $k . '="' . $v . '"';
+               else
+                    $str .= ' ' . $v;
 			}
 		}
 		$str .= '>' . $anchor['body'] . '</a>';
@@ -245,7 +264,7 @@ class anchor_utils {
 				<\s*\/\s*\\1\s*>
 				/isx",
 			) as $regex ) {
-			$text = preg_replace_callback($regex, array('anchor_utils', 'escape_callback'), $text);
+			$text = preg_replace_callback($regex, array($this, 'escape_callback'), $text);
 		}
 		
 		return $text;
@@ -288,10 +307,5 @@ class anchor_utils {
 	} # unescape()
 } # anchor_utils
 
-add_filter('the_content', array('anchor_utils', 'filter'), 100);
-add_filter('the_excerpt', array('anchor_utils', 'filter'), 100);
-add_filter('widget_text', array('anchor_utils', 'filter'), 100);
-add_filter('comment_text', array('anchor_utils', 'filter'), 100);
-
-add_action('wp_head', array('anchor_utils', 'ob_start'), 10000);
+$anchor_utils = new anchor_utils();
 ?>

@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 4.1
+Version: 4.2
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -30,7 +30,25 @@ load_plugin_textdomain('external-links', false, dirname(plugin_basename(__FILE__
  **/
 
 class external_links {
-	/**
+    /**
+     * external_links()
+     */
+    function external_links() {
+        if ( !is_admin() ) {
+        	$o = external_links::get_options();
+
+        	if ( $o['icon'] )
+        		add_action('wp_print_styles', array($this, 'styles'), 5);
+
+        	add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
+
+        	unset($o);
+        } else {
+        	add_action('admin_menu', array($this, 'admin_menu'));
+        }
+    }
+
+    /**
 	 * styles()
 	 *
 	 * @return void
@@ -102,6 +120,14 @@ class external_links {
 			$site_domain = get_option('home');
 			$site_domain = parse_url($site_domain);
 			$site_domain = $site_domain['host'];
+            if ($site_domain == false)
+                return false;
+            elseif (is_array($site_domain)) {
+                if (isset($site_domain['host']))
+                    $site_domain = $site_domain['host'];
+                else
+                    return false;
+            }
 			$site_domain = preg_replace("/^www\./i", '', $site_domain);
 			
 			# The following is not bullet proof, but it's good enough for a WP site
@@ -137,7 +163,14 @@ class external_links {
 			return false;
 		
 		$link_domain = parse_url($url);
-		$link_domain = $link_domain['host'];
+        if ($link_domain == false)
+            return false;
+        elseif (is_array($link_domain)) {
+            if (isset($link_domain['host']))
+		        $link_domain = $link_domain['host'];
+            else
+                return false;
+        }
 		$link_domain = preg_replace("/^www\./i", '', $link_domain);
 		$link_domain = strtolower($link_domain);
 		
@@ -229,20 +262,10 @@ function external_links_admin() {
 
 add_action('load-settings_page_external-links', 'external_links_admin');
 
-
 if ( !is_admin() ) {
 	if ( !class_exists('anchor_utils') )
 		include dirname(__FILE__) . '/anchor-utils/anchor-utils.php';
-	
-	$o = external_links::get_options();
-	
-	if ( $o['icon'] )
-		add_action('wp_print_styles', array('external_links', 'styles'), 5);
-	
-	add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array('external_links', 'filter'));
-	
-	unset($o);
-} else {
-	add_action('admin_menu', array('external_links', 'admin_menu'));
 }
+
+$external_links = new external_links();
 ?>
