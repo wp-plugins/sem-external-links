@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.6
+Tested up to: 3.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -19,7 +19,7 @@ Under Settings / External Links, you can configure the plugin to:
 - Process all outgoing links, rather than only those within your entries' content.
 - Add an external link icon to outgoing links. You can use a class="no_icon" attribute on links to override this.
 - Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
-- Add rel=nofollow to the links. You can use a rel="nofollow" attribute on links to override this.
+- Add rel=nofollow to the links. You can use a rel="follow" attribute on links to override this.
 
 = Help Me! =
 
@@ -35,6 +35,12 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 
 == Change Log ==
+
+= 5.0 =
+
+- Completely replaced the mechanism for parsing links to resolve the various errors that have been occurring with different external services' link attributes
+- Added new option to apply to text widgets in addition to content and comment links.   This will now handle 95% of the external link cases and allow for Apply Globally to be left off.
+- Tested with WP 3.7
 
 = 4.2 =
 

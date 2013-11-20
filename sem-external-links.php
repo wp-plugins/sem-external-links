@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 4.2
+Version: 5.0
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -14,7 +14,7 @@ Domain Path: /lang
 Terms of use
 ------------
 
-This software is copyright Mesoconcepts (http://www.mesoconcepts.com), and is distributed under the terms of the GPL license, v.2.
+This software is copyright Denis de Bernardy & Mike Koepke, and is distributed under the terms of the GPL license, v.2.
 
 http://www.opensource.org/licenses/gpl-2.0.php
 **/
@@ -30,17 +30,33 @@ load_plugin_textdomain('external-links', false, dirname(plugin_basename(__FILE__
  **/
 
 class external_links {
+
+	private $opts;
+
     /**
-     * external_links()
+     * constructor()
      */
-    function external_links() {
+    public function __construct() {
         if ( !is_admin() ) {
+
+	        if ( !class_exists('simple_html_dom_node') )
+	            include dirname(__FILE__) . '/simple_html_dom.php';
+
         	$o = external_links::get_options();
 
         	if ( $o['icon'] )
         		add_action('wp_print_styles', array($this, 'styles'), 5);
 
-        	add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
+        	if ( $o['global'] )
+		        add_action('wp_head', array($this, 'ob_start'), 10000);
+			else {
+		        add_filter('the_content', array($this, 'filter'), 100);
+		        add_filter('the_excerpt', array($this, 'filter'), 100);
+		        add_filter('comment_text', array($this, 'filter'), 100);
+
+				if ( $o['text_widgets'] )
+					add_filter('widget_text', array($this, 'filter'), 100);
+			}
 
         	unset($o);
         } else {
@@ -58,46 +74,95 @@ class external_links {
 		$folder = plugin_dir_url(__FILE__);
 		wp_enqueue_style('external-links', $folder . 'sem-external-links.css', null, '20090903');
 	} # styles()
-	
-	
+
+
+	/**
+	* ob_start()
+	*
+	* @return void
+	**/
+
+	function ob_start() {
+
+		ob_start(array($this, 'filter'));
+		add_action('wp_footer', array($this, 'ob_flush'), 10000);
+
+	} # ob_start()
+
+
+	/**
+	 * ob_flush()
+	 *
+	 * @return void
+	 **/
+
+	static function ob_flush() {
+
+		ob_end_flush();
+	} # ob_flush()
+
 	/**
 	 * filter()
 	 *
-	 * @param array $anchor
-	 * @return array $anchor
+	 * @param string $text
+	 * @return string $text
 	 **/
 
-	function filter($anchor) {
+	function filter($text) {
+
+		$anchor = array();
+
+		$this->opts = external_links::get_options();
+
+		$html = new simple_html_dom();
+		$html->load( $text );
+		foreach( $html->find( 'a, img' ) as $link) {
+
+			$this->apply_attributes( $link );
+		}
+
+		$text = $html->save();
+
+		return $text;
+	} # filter()
+	
+	/**
+	 * apply_attributes()
+	 *
+	 * @param simple_html_dom_node $anchor
+	 * @return null
+	 **/
+
+	function apply_attributes( $anchor ) {
 		# disable in feeds
 		if ( is_feed() )
-			return $anchor;
+			return;
 		
 		# ignore local urls
-		if ( external_links::is_local_url($anchor['attr']['href']) )
-			return $anchor;
+		$url =  ($anchor->tag == 'a') ? $anchor->href : $anchor->src;
+		if ( $this->is_local_url( $url ) )
+			return;
 		
-		# no icons for images
-		$is_image = (bool) preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']);
+		if ( isset($anchor->class) ) {
+			if ( stripos($anchor->class, 'external') === false )
+				$anchor->class .= ' external';
+		}
+		else
+			$anchor->class = 'external';
+
+		if ( $anchor->tag == 'a' && $this->opts['icon']
+			&& ( stripos($anchor->class, 'external_icon') === false )
+			&& ( stripos($anchor->class, 'no_icon') === false )
+			&& ( stripos($anchor->class, 'noicon') === false ) )
+			$anchor->class .= ' external_icon';
+
+		if ( $this->opts['nofollow'] && !function_exists('strip_nofollow')
+			&& ( stripos($anchor->rel, 'nofollow') === false )
+			&& ( stripos($anchor->rel, 'follow') === false ) )
+				$anchor->rel = 'nofollow';
 		
-		$o = external_links::get_options();
-		
-		if ( !in_array('external', $anchor['attr']['class']) )
-			$anchor['attr']['class'][] = 'external';
-		
-		if ( !$is_image && $o['icon'] && !in_array('external_icon', $anchor['attr']['class'])
-			&& !in_array('no_icon', $anchor['attr']['class'])
-			&& !in_array('noicon', $anchor['attr']['class']) )
-			$anchor['attr']['class'][] = 'external_icon';
-		
-		if ( $o['nofollow'] && !function_exists('strip_nofollow')
-			&& !in_array('nofollow', $anchor['attr']['rel'])
-			&& !in_array('follow', $anchor['attr']['rel']) )
-			$anchor['attr']['rel'][] = 'nofollow';
-		
-		if ( $o['target'] && empty($anchor['attr']['target']) )
-		 	$anchor['attr']['target'] = '_blank';
-		
-		return $anchor;
+		if ( $this->opts['target'] && !isset($anchor->target) )
+			$anchor->target = '_blank';
 	} # filter()
 	
 	
@@ -206,7 +271,7 @@ class external_links {
 		
 		$o = get_option('external_links');
 		
-		if ( $o === false )
+		if ( $o === false || !isset($o['text_widgets']) )
 			$o = external_links::init_options();
 		
 		return $o;
@@ -220,17 +285,20 @@ class external_links {
 	 **/
 
 	function init_options() {
-		$o = get_option('sem_external_links_params');
-		
-		if ( $o !== false )
-			delete_option('sem_external_links_params');
-		
-		$o = wp_parse_args($o, array(
-			'global' => true,
-			'icon' => true,
-			'target' => false,
-			'nofollow' => false,
-			));
+		$o = get_option('external_links');
+
+		$defaults = array(
+					'global' => false,
+					'icon' => true,
+					'target' => false,
+					'nofollow' => true,
+					'text_widgets' => true,
+					);
+
+		if ( !$o )
+			$o  = $defaults;
+		else
+			$o = wp_parse_args($o, $defaults);
 		
 		update_option('external_links', $o);
 		
@@ -261,11 +329,6 @@ function external_links_admin() {
 }
 
 add_action('load-settings_page_external-links', 'external_links_admin');
-
-if ( !is_admin() ) {
-	if ( !class_exists('anchor_utils') )
-		include dirname(__FILE__) . '/anchor-utils/anchor-utils.php';
-}
 
 $external_links = new external_links();
 ?>
