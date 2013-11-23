@@ -25,10 +25,10 @@ class external_links_admin {
 		
 		check_admin_referer('external_links');
 		
-		foreach ( array('global', 'icon', 'target', 'nofollow', 'text_widgets') as $var )
+		foreach ( array('global', 'icon', 'target', 'nofollow') as $var )
 			$$var = isset($_POST[$var]);
 		
-		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets'));
+		update_option('external_links', compact('global', 'icon', 'target', 'nofollow'));
 		
 		echo "<div class=\"updated fade\">\n"
 			. "<p>"
@@ -78,26 +78,11 @@ class external_links_admin {
 				. checked($options['global'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Apply these settings to all outbound links, including those in headers, sidebars and footers, rather than to those in posts and comments.', 'external-links')
+			. __('Apply these settings to all outbound links, including those in headers, footers and sidebars, rather than only those in posts/pages, comments and text widgets.', 'external-links')
 			. '</label>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
-
-		echo '<tr>' . "\n"
-			. '<th scope="row">'
-			. __('Apply to Text Widgets', 'external-links')
-			. '</th>' . "\n"
-			. '<td>'
-			. '<label>'
-			. '<input type="checkbox" name="text_widgets"'
-				. checked($options['text_widgets'], true, false)
-				. ' />'
-			. '&nbsp;'
-			. __('Apply these settings to all text widgets in addition to those in posts and comments.', 'external-links')
-			. '</label>'
-			. '</td>' . "\n"
-			. '</tr>' . "\n";
-
+		
 		echo '<tr>' . "\n"
 			. '<th scope="row">'
 			. __('Add Icons', 'external-links')
@@ -128,7 +113,7 @@ class external_links_admin {
 			. __('Add a rel=nofollow attribute to outbound links.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links')
+			. __('Note: You can override this behavior by adding a rel="follow" to individual links.', 'external-links')
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 		

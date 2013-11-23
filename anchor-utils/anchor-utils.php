@@ -2,7 +2,7 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
- * Version: 1.2
+ * Version: 1.3
  */
 
 if ( @ini_get('pcre.backtrack_limit') <= 750000 )
@@ -17,10 +17,11 @@ if ( @ini_get('pcre.recursion_limit') <= 250000 )
  **/
 
 class anchor_utils {
-    /**
+
+	/**
      * anchor_utils
      */
-    function anchor_utils() {
+    public function __construct() {
         add_filter('the_content', array($this, 'filter'), 100);
         add_filter('the_excerpt', array($this, 'filter'), 100);
         add_filter('widget_text', array($this, 'filter'), 100);
@@ -28,6 +29,7 @@ class anchor_utils {
 
         add_action('wp_head', array($this, 'ob_start'), 10000);
     } #anchor_utils
+
 
     /**
 	 * ob_start()
@@ -182,13 +184,8 @@ class anchor_utils {
 	 **/
 
 	function parse_anchor($match) {
-
-        // Fix links that have javascript onClick or similar code but uses ="  " rather than ='  ".  Messes up attribute extraction especially for threaded comments
-        $on_patterns = '/(onClick|onMouseOver|onMouseOut|onMouseDown|onMouseUp|onDblClick|onContextMenu|onLoad|onAbort|onError)="(.+?)"/iU';
-        $match[1] = preg_replace($on_patterns, "$1='$2'", $match[1]);
-
 		$anchor = array();
-		$anchor['attr'] = shortcode_parse_atts($match[1]);
+		$anchor['attr'] = anchor_utils::parse_attrs($match[1]);
 
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
 			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
@@ -305,6 +302,90 @@ class anchor_utils {
 		
 		return str_replace(array_keys($unescape), array_values($unescape), $text);
 	} # unescape()
+
+	/**
+	 * Parse an attributes string into an array. If the string starts with a tag,
+	 * then the attributes on the first tag are parsed. This parses via a manual
+	 * loop and is designed to be safer than using DOMDocument.
+	 *
+	 * @param    string|*   $attrs
+	 * @return   array
+	 *
+	 * @example  parse_attrs( 'src="example.jpg" alt="example"' )
+	 * @example  parse_attrs( '<img src="example.jpg" alt="example">' )
+	 * @example  parse_attrs( '<a href="example"></a>' )
+	 * @example  parse_attrs( '<a href="example">' )
+	 */
+	function parse_attrs($attrs) {
+
+	    if ( !is_scalar($attrs) )
+	        return (array) $attrs;
+
+	    $attrs = str_split( trim($attrs) );
+
+	    if ( '<' === $attrs[0] ) # looks like a tag so strip the tagname
+	        while ( $attrs && ! ctype_space($attrs[0]) && $attrs[0] !== '>' )
+	            array_shift($attrs);
+
+	    $arr = array(); # output
+	    $name = '';     # for the current attr being parsed
+	    $value = '';    # for the current attr being parsed
+	    $mode = 0;      # whether current char is part of the name (-), the value (+), or neither (0)
+	    $stop = false;  # delimiter for the current $value being parsed
+	    $space = ' ';   # a single space
+
+	    foreach ( $attrs as $j => $curr ) {
+
+	        if ( $mode < 0 ) {# name
+	            if ( '=' === $curr ) {
+	                $mode = 1;
+	                $stop = false;
+	            } elseif ( '>' === $curr ) {
+	                '' === $name or $arr[ $name ] = $value;
+	                break;
+	            } elseif ( !ctype_space($curr) ) {
+	                if ( ctype_space( $attrs[ $j - 1 ] ) ) { # previous char
+	                    '' === $name or $arr[ $name ] = '';   # previous name
+	                    $name = $curr;                        # initiate new
+	                } else {
+	                    $name .= $curr;
+	                }
+	            }
+	        } elseif ( $mode > 0 ) {# value
+	            if ( $stop === false ) {
+	                if ( !ctype_space($curr) ) {
+	                    if ( '"' === $curr || "'" === $curr ) {
+	                        $value = '';
+	                        $stop = $curr;
+	                    } else {
+	                        $value = $curr;
+	                        $stop = $space;
+	                    }
+	                }
+	            } elseif ( $stop === $space ? ctype_space($curr) : $curr === $stop ) {
+	                $arr[ $name ] = $value;
+	                $mode = 0;
+	                $name = $value = '';
+	            } else {
+	                $value .= $curr;
+	            }
+	        } else {# neither
+
+	            if ( '>' === $curr )
+	                break;
+	            if ( !ctype_space( $curr ) ) {
+	                # initiate
+	                $name = $curr;
+	                $mode = -1;
+	            }
+	        }
+	    }
+
+	    # incl the final pair if it was quoteless
+	    '' === $name or $arr[ $name ] = $value;
+
+	    return $arr;
+	}
 } # anchor_utils
 
 $anchor_utils = new anchor_utils();

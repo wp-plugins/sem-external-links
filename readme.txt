@@ -25,7 +25,7 @@ Under Settings / External Links, you can configure the plugin to:
 
 The [Semiologic forum](http://forum.semiologic.com) is the best place to report issues. Please note, however, that while community members and I do our best to answer all queries, we're assisting you on a voluntary basis.
 
-If you require more dedicated assistance, consider using [Semiologic Pro](http://www.getsemiologic.com).
+If you require more dedicated assistance, consider using [Semiologic Pro](http://www.semiologic.com).
 
 
 == Installation ==
@@ -36,10 +36,13 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.1 =
+
+- Take two!  With issues now with breaking google adsense code reverted back to 4.2 parsing code but added more advanced dom attribute parsing code to handle various link configurations.
+
 = 5.0 =
 
 - Completely replaced the mechanism for parsing links to resolve the various errors that have been occurring with different external services' link attributes
-- Added new option to apply to text widgets in addition to content and comment links.   This will now handle 95% of the external link cases and allow for Apply Globally to be left off.
 - Tested with WP 3.7
 
 = 4.2 =
