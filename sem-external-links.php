@@ -3,20 +3,20 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 5.1
+Version: 5.2
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.semiologic.com
 Text Domain: external-links
 Domain Path: /lang
+License: Dual licensed under the MIT and GPL licenses
 */
 
 /*
 Terms of use
 ------------
 
-This software is copyright Denis de Bernardy & Mike Koepke, and is distributed under the terms of the GPL license, v2.
+This software is copyright Denis de Bernardy & Mike Koepke, and is distributed under the terms of the MIT and GPLv2 licenses.
 
-http://www.opensource.org/licenses/gpl-2.0.php
 **/
 
 
@@ -33,6 +33,8 @@ class external_links {
 
 	protected $opts;
 
+	protected $anchor_utils;
+
     /**
      * constructor()
      */
@@ -43,6 +45,12 @@ class external_links {
                 include dirname(__FILE__) . '/anchor-utils/anchor-utils.php';
 
         	$o = external_links::get_options();
+
+	        $inc_text_widgets = false;
+	        if ( isset( $o['text_widgets'] ) && $o['text_widgets'] )
+		        $inc_text_widgets = true;
+
+	        $this->anchor_utils = new anchor_utils( $inc_text_widgets );
 
         	if ( $o['icon'] )
         		add_action('wp_print_styles', array($this, 'styles'), 5);
@@ -212,13 +220,13 @@ class external_links {
 		
 		$o = get_option('external_links');
 		
-		if ( $o === false )
+		if ( $o === false || !isset($o['text_widgets']) )
 			$o = external_links::init_options();
-		
+
 		return $o;
 	} # get_options()
-	
-	
+
+
 	/**
 	 * init_options()
 	 *
@@ -233,18 +241,20 @@ class external_links {
 					'icon' => true,
 					'target' => false,
 					'nofollow' => true,
+					'text_widgets' => true,
 					);
 
 		if ( !$o )
 			$o  = $defaults;
 		else
 			$o = wp_parse_args($o, $defaults);
-		
+
 		update_option('external_links', $o);
-		
+
 		return $o;
 	} # init_options()
-	
+
+
 	
 	/**
 	 * admin_menu()
@@ -271,4 +281,3 @@ function external_links_admin() {
 add_action('load-settings_page_external-links', 'external_links_admin');
 
 $external_links = new external_links();
-?>

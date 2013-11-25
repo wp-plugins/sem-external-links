@@ -2,7 +2,7 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
- * Version: 1.3
+ * Version: 1.4
  */
 
 if ( @ini_get('pcre.backtrack_limit') <= 750000 )
@@ -19,13 +19,14 @@ if ( @ini_get('pcre.recursion_limit') <= 250000 )
 class anchor_utils {
 
 	/**
-     * anchor_utils
+     * constructor
      */
-    public function __construct() {
+    public function __construct( $inc_text_widgets = true ) {
         add_filter('the_content', array($this, 'filter'), 100);
         add_filter('the_excerpt', array($this, 'filter'), 100);
-        add_filter('widget_text', array($this, 'filter'), 100);
         add_filter('comment_text', array($this, 'filter'), 100);
+	    if ( $inc_text_widgets )
+	        add_filter('widget_text', array($this, 'filter'), 100);
 
         add_action('wp_head', array($this, 'ob_start'), 10000);
     } #anchor_utils
@@ -61,17 +62,17 @@ class anchor_utils {
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
 		
-		$text = anchor_utils::escape($text);
+		$text = $this->escape($text);
 		
 		$text = preg_replace_callback("/
 			<\s*a\s+
 			([^<>]+)
 			>
-			(.+?)
+			(.*?)
 			<\s*\/\s*a\s*>
 			/isx", array($this, 'ob_filter_callback'), $text);
 		
-		$text = anchor_utils::unescape($text);
+		$text = $this->unescape($text);
 		
 		return $text;
 	} # ob_filter()
@@ -107,7 +108,7 @@ class anchor_utils {
 			return $match[0];
 		
 		# parse anchor
-		$anchor = anchor_utils::parse_anchor($match);
+		$anchor = $this->parse_anchor($match);
 		
 		if ( !$anchor )
 			return $match[0];
@@ -116,7 +117,7 @@ class anchor_utils {
 		$anchor = apply_filters('ob_filter_anchor', $anchor);
 		
 		# return anchor
-		return anchor_utils::build_anchor($anchor);
+		return $this->build_anchor($anchor);
 	} # ob_filter_callback()
 	
 	
@@ -134,17 +135,17 @@ class anchor_utils {
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
 		
-		$text = anchor_utils::escape($text);
+		$text = $this->escape($text);
 		
 		$text = preg_replace_callback("/
 			<\s*a\s+
 			([^<>]+)
 			>
-			(.+?)
+			(.*?)
 			<\s*\/\s*a\s*>
 			/isx", array($this, 'filter_callback'), $text);
 		
-		$text = anchor_utils::unescape($text);
+		$text = $this->unescape($text);
 		
 		return $text;
 	} # filter()
@@ -163,7 +164,7 @@ class anchor_utils {
 			return $match[0];
 		
 		# parse anchor
-		$anchor = anchor_utils::parse_anchor($match);
+		$anchor = $this->parse_anchor($match);
 		
 		if ( !$anchor )
 			return $match[0];
@@ -172,7 +173,7 @@ class anchor_utils {
 		$anchor = apply_filters('filter_anchor', $anchor);
 		
 		# return anchor
-		return anchor_utils::build_anchor($anchor);
+		return $this->build_anchor($anchor);
 	} # filter_callback()
 	
 	
@@ -185,7 +186,8 @@ class anchor_utils {
 
 	function parse_anchor($match) {
 		$anchor = array();
-		$anchor['attr'] = anchor_utils::parse_attrs($match[1]);
+//		$anchor['attr'] = shortcode_parse_atts($match[1]);
+		$anchor['attr'] = $this->parse_attrs($match[1]);
 
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
 			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
@@ -387,6 +389,3 @@ class anchor_utils {
 	    return $arr;
 	}
 } # anchor_utils
-
-$anchor_utils = new anchor_utils();
-?>

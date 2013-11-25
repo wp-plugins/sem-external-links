@@ -16,10 +16,10 @@ The external links plugin for WordPress lets you process outgoing links differen
 
 Under Settings / External Links, you can configure the plugin to:
 
-- Process all outgoing links, rather than only those within your entries' content.
+- Process all outgoing links, rather than only those within your entries' content and text widgets.
 - Add an external link icon to outgoing links. You can use a class="no_icon" attribute on links to override this.
-- Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
 - Add rel=nofollow to the links. You can use a rel="follow" attribute on links to override this.
+- Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
 
 = Help Me! =
 
@@ -35,6 +35,11 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 
 == Change Log ==
+
+= 5.2 =
+
+- Further updates to the link attribute parsing code
+- Fixed bug where external link was not processed if it was preceded by an empty text anchor link.
 
 = 5.1 =
 
