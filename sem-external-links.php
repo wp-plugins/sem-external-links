@@ -3,12 +3,12 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 5.2
+Version: 5.2.1
 Author: Denis de Bernardy & Mike Koepke
-Author URI: http://www.semiologic.com
+Author URI: http://www.getsemiologic.com
 Text Domain: external-links
 Domain Path: /lang
-License: Dual licensed under the MIT and GPL licenses
+License: Dual licensed under the MIT and GPLv2 licenses
 */
 
 /*
@@ -53,7 +53,7 @@ class external_links {
 	        $this->anchor_utils = new anchor_utils( $inc_text_widgets );
 
         	if ( $o['icon'] )
-        		add_action('wp_print_styles', array($this, 'styles'), 5);
+        		add_action('wp_enqueue_scripts', array($this, 'styles'), 5);
 
 	        add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
 

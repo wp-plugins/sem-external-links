@@ -9,7 +9,7 @@ class external_links_admin {
     /**
      * external_links_admin()
      */
-    function external_links_admin() {
+	public function __construct() {
         add_action('settings_page_external-links', array($this, 'save_options'), 0);
     }
 
@@ -54,15 +54,13 @@ class external_links_admin {
 		
 		$options = external_links::get_options();
 		
-		if ( $options['nofollow'] && function_exists('strip_nofollow') ) {
+		if ( $options['nofollow'] && ( function_exists('strip_nofollow') || class_exists('sem_dofollow') ) ) {
 			echo "<div class=\"error\">\n"
 				. "<p>"
 					. __('Note: Your rel=nofollow preferences is being ignored because the dofollow plugin is enabled on your site.', 'external-links')
 				. "</p>\n"
 				. "</div>\n";
 		}
-		
-		screen_icon();
 		
 		echo '<h2>' . __('External Links Settings', 'external-links') . '</h2>' . "\n";
 		
@@ -163,4 +161,3 @@ class external_links_admin {
 } # external_links_admin
 
 $external_links_admin = new external_links_admin();
-?>

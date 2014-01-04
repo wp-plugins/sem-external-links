@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.7
+Tested up to: 3.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,11 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 
 == Change Log ==
+
+= 5.2.1 =
+
+- Checks for new sem_dofollow class to determine if Do Follow plugin is active
+- WP 3.8 compat
 
 = 5.2 =
 
