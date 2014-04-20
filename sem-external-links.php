@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 5.2.1
+Version: 5.3
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -19,10 +19,6 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-
-load_plugin_textdomain('external-links', false, dirname(plugin_basename(__FILE__)) . '/lang');
-
-
 /**
  * external_links
  *
@@ -35,33 +31,115 @@ class external_links {
 
 	protected $anchor_utils;
 
-    /**
-     * constructor()
-     */
+	/**
+	 * Plugin instance.
+	 *
+	 * @see get_instance()
+	 * @type object
+	 */
+	protected static $instance = NULL;
+
+	/**
+	 * URL to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_url = '';
+
+	/**
+	 * Path to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_path = '';
+
+	/**
+	 * Access this plugin’s working instance
+	 *
+	 * @wp-hook plugins_loaded
+	 * @return  object of this class
+	 */
+	public static function get_instance()
+	{
+		NULL === self::$instance and self::$instance = new self;
+
+		return self::$instance;
+	}
+
+	/**
+	 * Loads translation file.
+	 *
+	 * Accessible to other classes to load different language files (admin and
+	 * front-end for example).
+	 *
+	 * @wp-hook init
+	 * @param   string $domain
+	 * @return  void
+	 */
+	public function load_language( $domain )
+	{
+		load_plugin_textdomain(
+			$domain,
+			FALSE,
+			$this->plugin_path . 'lang'
+		);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 *
+	 */
     public function __construct() {
-        if ( !is_admin() ) {
+	    $this->plugin_url    = plugins_url( '/', __FILE__ );
+        $this->plugin_path   = plugin_dir_path( __FILE__ );
+        $this->load_language( 'external-links' );
 
-            if ( !class_exists('anchor_utils') )
-                include dirname(__FILE__) . '/anchor-utils/anchor-utils.php';
-
-        	$o = external_links::get_options();
-
-	        $inc_text_widgets = false;
-	        if ( isset( $o['text_widgets'] ) && $o['text_widgets'] )
-		        $inc_text_widgets = true;
-
-	        $this->anchor_utils = new anchor_utils( $inc_text_widgets );
-
-        	if ( $o['icon'] )
-        		add_action('wp_enqueue_scripts', array($this, 'styles'), 5);
-
-	        add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
-
-        	unset($o);
-        } else {
-        	add_action('admin_menu', array($this, 'admin_menu'));
-        }
+	    add_action( 'plugins_loaded', array ( $this, 'init' ) );
     }
+
+
+	/**
+	 * init()
+	 *
+	 * @return void
+	 **/
+
+	function init() {
+		// more stuff: register actions and filters
+		if ( !is_admin() ) {
+			if ( !class_exists('anchor_utils') )
+			    include $this->plugin_path . '/anchor-utils/anchor-utils.php';
+
+			$o = external_links::get_options();
+
+			$inc_text_widgets = false;
+			if ( isset( $o['text_widgets'] ) && $o['text_widgets'] )
+				$inc_text_widgets = true;
+
+			$this->anchor_utils = new anchor_utils( $inc_text_widgets );
+
+			if ( $o['icon'] )
+				add_action('wp_enqueue_scripts', array($this, 'styles'), 5);
+
+			add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
+
+			unset($o);
+		}
+		else {
+			add_action('admin_menu', array($this, 'admin_menu'));
+			add_action('load-settings_page_external-links', array($this, 'external_links_admin'));
+		}
+	}
+
+	/**
+	* external_links_admin()
+	*
+	* @return void
+	**/
+	function external_links_admin() {
+		include_once $this->plugin_path . '/sem-external-links-admin.php';
+	}
 
     /**
 	 * styles()
@@ -94,7 +172,13 @@ class external_links {
 		# no icons for images
 		$is_image = (bool) preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']);
 
+		$current_filter = $anchor['current_filter'];
+
 		$o = external_links::get_options();
+
+		# is this is a widget callback and the option is off return;
+		if ( 'widget_text' == $current_filter && (isset( $o['text_widgets'] ) && !$o['text_widgets']) )
+			return $anchor;
 
 		if ( !in_array('external', $anchor['attr']['class']) )
 			$anchor['attr']['class'][] = 'external';
@@ -273,11 +357,4 @@ class external_links {
 	} # admin_menu()
 } # external_links
 
-
-function external_links_admin() {
-	include_once dirname(__FILE__) . '/sem-external-links-admin.php';
-}
-
-add_action('load-settings_page_external-links', 'external_links_admin');
-
-$external_links = new external_links();
+$external_links = external_links::get_instance();

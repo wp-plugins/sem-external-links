@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.8
+Tested up to: 3.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,13 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 
 == Change Log ==
+
+= 5.3 =
+
+- Fix: Conflict with Auto Thickbox plugin that would result in text widgets still being filtered even though option was turned off
+- Fix: Ensure this plugin filter is executed way back in the change to prevent other plugins/themes from reversing our changes
+- Code refactoring
+- WP 3.9 compat
 
 = 5.2.1 =
 

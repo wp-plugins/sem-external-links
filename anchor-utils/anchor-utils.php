@@ -2,11 +2,11 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
- * Version: 1.4
+ * Version: 1.5
  */
 
-if ( @ini_get('pcre.backtrack_limit') <= 750000 )
-	@ini_set('pcre.backtrack_limit', 750000);
+if ( @ini_get('pcre.backtrack_limit') <= 1000000 )
+	@ini_set('pcre.backtrack_limit', 1000000);
 if ( @ini_get('pcre.recursion_limit') <= 250000 )
 	@ini_set('pcre.recursion_limit', 250000);
 
@@ -22,13 +22,15 @@ class anchor_utils {
      * constructor
      */
     public function __construct( $inc_text_widgets = true ) {
-        add_filter('the_content', array($this, 'filter'), 100);
-        add_filter('the_excerpt', array($this, 'filter'), 100);
-        add_filter('comment_text', array($this, 'filter'), 100);
-	    if ( $inc_text_widgets )
-	        add_filter('widget_text', array($this, 'filter'), 100);
+	    $priority = 1000000000;
 
-        add_action('wp_head', array($this, 'ob_start'), 10000);
+        add_filter('the_content', array($this, 'filter'), $priority);
+        add_filter('the_excerpt', array($this, 'filter'), $priority);
+        add_filter('comment_text', array($this, 'filter'), $priority);
+	    if ( $inc_text_widgets )
+	        add_filter('widget_text', array($this, 'filter'), $priority);
+
+        add_action('wp_head', array($this, 'ob_start'), $priority);
     } #anchor_utils
 
 
@@ -40,17 +42,17 @@ class anchor_utils {
 
 	function ob_start() {
 		static $done = false;
-		
+
 		if ( $done )
 			return;
-		
+
 		if ( has_filter('ob_filter_anchor') ) {
 			ob_start(array($this, 'ob_filter'));
-			add_action('wp_footer', array($this, 'ob_flush'), 10000);
+			add_action('wp_footer', array($this, 'ob_flush'), 100000);
 			$done = true;
 		}
 	} # ob_start()
-	
+
 	/**
 	 * ob_filter()
 	 *
@@ -61,9 +63,9 @@ class anchor_utils {
 	function ob_filter($text) {
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
-		
+
 		$text = $this->escape($text);
-		
+
 		$text = preg_replace_callback("/
 			<\s*a\s+
 			([^<>]+)
@@ -71,13 +73,13 @@ class anchor_utils {
 			(.*?)
 			<\s*\/\s*a\s*>
 			/isx", array($this, 'ob_filter_callback'), $text);
-		
+
 		$text = $this->unescape($text);
-		
+
 		return $text;
 	} # ob_filter()
-	
-	
+
+
 	/**
 	 * ob_flush()
 	 *
@@ -86,15 +88,15 @@ class anchor_utils {
 
 	static function ob_flush() {
 		static $done = true;
-		
+
 		if ( $done )
 			return;
-		
+
 		ob_end_flush();
 		$done = true;
 	} # ob_flush()
-	
-	
+
+
 	/**
 	 * ob_filter_callback()
 	 *
@@ -106,21 +108,24 @@ class anchor_utils {
 		# skip empty anchors
 		if ( !trim($match[2]) )
 			return $match[0];
-		
+
 		# parse anchor
 		$anchor = $this->parse_anchor($match);
-		
+
 		if ( !$anchor )
 			return $match[0];
-		
+
+		$anchor['current_filter'] = current_filter();
+
 		# filter anchor
-		$anchor = apply_filters('ob_filter_anchor', $anchor);
-		
+		$anchor = apply_filters( 'ob_filter_anchor', $anchor );
+		unset( $anchor['current_filter'] );
+
 		# return anchor
 		return $this->build_anchor($anchor);
 	} # ob_filter_callback()
-	
-	
+
+
 	/**
 	 * filter()
 	 *
@@ -131,12 +136,12 @@ class anchor_utils {
 	function filter($text) {
 		if ( !has_filter('filter_anchor') )
 			return $text;
-		
+
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
-		
+
 		$text = $this->escape($text);
-		
+
 		$text = preg_replace_callback("/
 			<\s*a\s+
 			([^<>]+)
@@ -144,13 +149,13 @@ class anchor_utils {
 			(.*?)
 			<\s*\/\s*a\s*>
 			/isx", array($this, 'filter_callback'), $text);
-		
+
 		$text = $this->unescape($text);
-		
+
 		return $text;
 	} # filter()
-	
-	
+
+
 	/**
 	 * filter_callback()
 	 *
@@ -162,21 +167,24 @@ class anchor_utils {
 		# skip empty anchors
 		if ( !trim($match[2]) )
 			return $match[0];
-		
+
 		# parse anchor
 		$anchor = $this->parse_anchor($match);
-		
+
 		if ( !$anchor )
 			return $match[0];
-		
+
+		$anchor['current_filter'] = current_filter();
+
 		# filter anchor
-		$anchor = apply_filters('filter_anchor', $anchor);
-		
+		$anchor = apply_filters( 'filter_anchor', $anchor );
+		unset( $anchor['current_filter'] );
+
 		# return anchor
 		return $this->build_anchor($anchor);
 	} # filter_callback()
-	
-	
+
+
 	/**
 	 * parse_anchor()
 	 *
@@ -192,7 +200,7 @@ class anchor_utils {
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
 			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
 			return false;
-		
+
 		foreach ( array('class', 'rel') as $attr ) {
 			if ( !isset($anchor['attr'][$attr]) ) {
 				$anchor['attr'][$attr] = array();
@@ -201,14 +209,14 @@ class anchor_utils {
 				$anchor['attr'][$attr] = array_map('trim', $anchor['attr'][$attr]);
 			}
 		}
-		
+
 		$anchor['body'] = $match[2];
-		
+
 		$anchor['attr']['href'] = @html_entity_decode($anchor['attr']['href'], ENT_COMPAT, get_option('blog_charset'));
-		
+
 		return $anchor;
 	} # parse_anchor()
-	
+
 
 	/**
 	 * build_anchor()
@@ -219,7 +227,7 @@ class anchor_utils {
 
 	function build_anchor($anchor) {
 		$anchor['attr']['href'] = esc_url($anchor['attr']['href']);
-		
+
 		$str = '<a';
 		foreach ( $anchor['attr'] as $k => $v ) {
 			if ( is_array($v) ) {
@@ -234,11 +242,11 @@ class anchor_utils {
 			}
 		}
 		$str .= '>' . $anchor['body'] . '</a>';
-		
+
 		return $str;
 	} # build_anchor()
-	
-	
+
+
 	/**
 	 * escape()
 	 *
@@ -248,10 +256,10 @@ class anchor_utils {
 
 	function escape($text) {
 		global $escape_anchor_filter;
-		
+
 		if ( !isset($escape_anchor_filter) )
 			$escape_anchor_filter = array();
-		
+
 		foreach ( array(
 			'head' => "/
 				.*?
@@ -265,11 +273,11 @@ class anchor_utils {
 			) as $regex ) {
 			$text = preg_replace_callback($regex, array($this, 'escape_callback'), $text);
 		}
-		
+
 		return $text;
 	} # escape()
-	
-	
+
+
 	/**
 	 * escape_callback()
 	 *
@@ -279,14 +287,14 @@ class anchor_utils {
 
 	function escape_callback($match) {
 		global $escape_anchor_filter;
-		
+
 		$tag_id = "----escape_anchor_utils:" . md5($match[0]) . "----";
 		$escape_anchor_filter[$tag_id] = $match[0];
-		
+
 		return $tag_id;
 	} # escape_callback()
-	
-	
+
+
 	/**
 	 * unescape()
 	 *
@@ -296,12 +304,12 @@ class anchor_utils {
 
 	function unescape($text) {
 		global $escape_anchor_filter;
-		
+
 		if ( !$escape_anchor_filter )
 			return $text;
-		
+
 		$unescape = array_reverse($escape_anchor_filter);
-		
+
 		return str_replace(array_keys($unescape), array_values($unescape), $text);
 	} # unescape()
 
