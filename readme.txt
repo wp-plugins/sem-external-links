@@ -36,6 +36,14 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.3.2 =
+
+- Temporarily placeholders links - http:// and https:// (no other url components) are no longer processed.
+
+= 5.3.1 =
+
+- Fix localization
+
 = 5.3 =
 
 - Fix: Conflict with Auto Thickbox plugin that would result in text widgets still being filtered even though option was turned off
