@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.4 =
+
+- Handle nested parenthesis in javascript event attributes on links and images
+
 = 5.3.2 =
 
 - Temporarily placeholders links - http:// and https:// (no other url components) are no longer processed.

@@ -2,7 +2,7 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
- * Version: 1.5
+ * Version: 1.6
  */
 
 if ( @ini_get('pcre.backtrack_limit') <= 1000000 )
@@ -343,6 +343,7 @@ class anchor_utils {
 	    $mode = 0;      # whether current char is part of the name (-), the value (+), or neither (0)
 	    $stop = false;  # delimiter for the current $value being parsed
 	    $space = ' ';   # a single space
+		$paren = 0;     # in parenthesis for js attrs
 
 	    foreach ( $attrs as $j => $curr ) {
 
@@ -362,23 +363,36 @@ class anchor_utils {
 	                }
 	            }
 	        } elseif ( $mode > 0 ) {# value
-	            if ( $stop === false ) {
-	                if ( !ctype_space($curr) ) {
-	                    if ( '"' === $curr || "'" === $curr ) {
-	                        $value = '';
-	                        $stop = $curr;
-	                    } else {
-	                        $value = $curr;
-	                        $stop = $space;
-	                    }
-	                }
-	            } elseif ( $stop === $space ? ctype_space($curr) : $curr === $stop ) {
-	                $arr[ $name ] = $value;
-	                $mode = 0;
-	                $name = $value = '';
-	            } else {
-	                $value .= $curr;
-	            }
+		        if ( $paren ) {
+			        $value .= $curr;
+                    if ( $curr === "(")
+                        $paren += 1;
+                    elseif ( $curr === ")")
+                        $paren -= 1;
+		        }
+		        else {
+		            if ( $stop === false ) {
+		                if ( !ctype_space($curr) ) {
+		                    if ( '"' === $curr || "'" === $curr ) {
+		                        $value = '';
+		                        $stop = $curr;
+		                    } else {
+		                        $value = $curr;
+		                        $stop = $space;
+		                    }
+		                }
+		            } elseif ( $stop === $space ? ctype_space($curr) : $curr === $stop ) {
+		                $arr[ $name ] = $value;
+		                $mode = 0;
+		                $name = $value = '';
+		            } else {
+		                $value .= $curr;
+			            if ( $curr === "(")
+	                        $paren += 1;
+	                    elseif ( $curr === ")")
+	                        $paren -= 1;
+		            }
+		        }
 	        } else {# neither
 
 	            if ( '>' === $curr )
