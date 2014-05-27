@@ -2,7 +2,7 @@
 /*
  * Anchor Utils
  * Author: Denis de Bernardy & Mike Koepke <http://www.semiologic.com>
- * Version: 1.6
+ * Version: 1.6.1
  */
 
 if ( @ini_get('pcre.backtrack_limit') <= 1000000 )
@@ -24,13 +24,13 @@ class anchor_utils {
     public function __construct( $inc_text_widgets = true ) {
 	    $priority = 1000000000;
 
-        add_filter('the_content', array($this, 'filter'), $priority);
-        add_filter('the_excerpt', array($this, 'filter'), $priority);
-        add_filter('comment_text', array($this, 'filter'), $priority);
+        add_filter('the_content', array($this, 'filter'), 100);
+        add_filter('the_excerpt', array($this, 'filter'), 100);
+        add_filter('comment_text', array($this, 'filter'), 100);
 	    if ( $inc_text_widgets )
-	        add_filter('widget_text', array($this, 'filter'), $priority);
+	        add_filter('widget_text', array($this, 'filter'), 100);
 
-        add_action('wp_head', array($this, 'ob_start'), $priority);
+        add_action('wp_head', array($this, 'ob_start'), 10000);
     } #anchor_utils
 
 
@@ -41,6 +41,7 @@ class anchor_utils {
 	 **/
 
 	function ob_start() {
+		echo '<!-- external-links  ' . 'ob_start' . ' -->' . "\n";
 		static $done = false;
 
 		if ( $done )
@@ -48,7 +49,7 @@ class anchor_utils {
 
 		if ( has_filter('ob_filter_anchor') ) {
 			ob_start(array($this, 'ob_filter'));
-			add_action('wp_footer', array($this, 'ob_flush'), 100000);
+			add_action('wp_footer', array($this, 'ob_flush'), 10000);
 			$done = true;
 		}
 	} # ob_start()
@@ -63,6 +64,8 @@ class anchor_utils {
 	function ob_filter($text) {
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
+
+		$text .= '<!-- external-links  ' . 'ob_filter' . ' -->' . "\n";
 
 		$text = $this->escape($text);
 
@@ -134,6 +137,7 @@ class anchor_utils {
 	 **/
 
 	function filter($text) {
+		$text .= '<!-- external-links  ' . current_filter() . ' -->' . "\n";
 		if ( !has_filter('filter_anchor') )
 			return $text;
 

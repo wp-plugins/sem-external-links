@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.4.1 =
+
+- Troubleshooting release.  Adds a few html comments in the page source to ensure hooks are being called.
+
 = 5.4 =
 
 - Handle nested parenthesis in javascript event attributes on links and images
