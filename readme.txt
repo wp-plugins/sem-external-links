@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.5.1 =
+
+- Additional tweak to global callback processing
+
 = 5.5 =
 
 - Use wp_print_footer_scripts hook instead of wp_footer as some themes fail to call wp_footer();

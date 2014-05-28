@@ -52,10 +52,8 @@ class external_links_anchor_utils {
 	function ob_start() {
 		echo '<!-- external-links  ' . 'ob_start' . ' -->' . "\n";
 
-		if ( has_filter('ob_filter_anchor') ) {
-			ob_start(array($this, 'ob_filter'));
-			add_action('wp_print_footer_scripts', array($this, 'ob_flush'), 100000);
-		}
+		ob_start(array($this, 'ob_filter'));
+		add_action('wp_print_footer_scripts', array($this, 'ob_flush'), 100000);
 	} # ob_start()
 
 	/**
@@ -136,8 +134,6 @@ class external_links_anchor_utils {
 
 	function filter($text) {
 		$text = '<!-- external-links  ' . current_filter() . ' -->' . "\n" . $text;
-		if ( !has_filter('filter_anchor') )
-			return $text;
 
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
