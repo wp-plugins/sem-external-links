@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 5.4.1
+Version: 5.5
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -108,21 +108,21 @@ class external_links {
 	function init() {
 		// more stuff: register actions and filters
 		if ( !is_admin() ) {
-			if ( !class_exists('anchor_utils') )
-			    include $this->plugin_path . '/anchor-utils/anchor-utils.php';
+			if ( !class_exists('external_links_anchor_utils') )
+			    include $this->plugin_path . '/external-links-anchor-utils.php';
 
 			$o = external_links::get_options();
+
+//			add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
 
 			$inc_text_widgets = false;
 			if ( isset( $o['text_widgets'] ) && $o['text_widgets'] )
 				$inc_text_widgets = true;
 
-			$this->anchor_utils = new anchor_utils( $inc_text_widgets );
+			$this->anchor_utils = new external_links_anchor_utils( $this, $o['global'], $inc_text_widgets );
 
 			if ( $o['icon'] )
 				add_action('wp_enqueue_scripts', array($this, 'styles'), 5);
-
-			add_filter(($o['global'] ? 'ob_' : '' ) . 'filter_anchor', array($this, 'filter'));
 
 			unset($o);
 		}
@@ -172,13 +172,7 @@ class external_links {
 		# no icons for images
 		$is_image = (bool) preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']);
 
-		$current_filter = $anchor['current_filter'];
-
 		$o = external_links::get_options();
-
-		# is this is a widget callback and the option is off return;
-		if ( 'widget_text' == $current_filter && (isset( $o['text_widgets'] ) && !$o['text_widgets']) )
-			return $anchor;
 
 		if ( !in_array('external', $anchor['attr']['class']) )
 			$anchor['attr']['class'][] = 'external';

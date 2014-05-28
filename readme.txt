@@ -36,6 +36,12 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.5 =
+
+- Use wp_print_footer_scripts hook instead of wp_footer as some themes fail to call wp_footer();
+- Use own custom version of the anchor_utils class
+- Content, excerpt and comment filters no longer called when Apply Globally is selected.   Improves performance.
+
 = 5.4.1 =
 
 - Troubleshooting release.  Adds a few html comments in the page source to ensure hooks are being called.
