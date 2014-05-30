@@ -30,7 +30,7 @@ class external_links_anchor_utils {
 	    $this->external_links = $external_links;
 
 	    if ( $apply_globally ) {
-		    add_action('wp', array($this, 'ob_start'), 1000000);
+		    add_action('template_redirect', array($this, 'ob_start'), 100);
 	    }
 	    else {
 	        add_filter('the_content', array($this, 'filter'), 1000000);

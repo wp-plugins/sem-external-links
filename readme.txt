@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.5.3 =
+
+- Use template_redirect hook and put ourselves after default hooks that most 404/redirect plugins want to use and Yoast's at priority 99999
+
 = 5.5.2 =
 
 - Fix compatibility with Yoast WP SEO plugin when Force Title Rewrite option is on and using the Apply Globally setting of this plugin.
