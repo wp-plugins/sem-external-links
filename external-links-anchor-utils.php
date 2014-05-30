@@ -50,8 +50,6 @@ class external_links_anchor_utils {
 	 **/
 
 	function ob_start() {
-		echo '<!-- external-links  ' . 'ob_start' . ' -->' . "\n";
-
 		ob_start(array($this, 'ob_filter'));
 		add_action('wp_footer', array($this, 'ob_flush'), 1000000);
 	} # ob_start()
@@ -66,8 +64,6 @@ class external_links_anchor_utils {
 	function ob_filter($text) {
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
-
-		$text = '<!-- external-links  ' . 'ob_filter' . ' -->' . "\n" . $text;
 
 		$text = $this->escape($text);
 
@@ -92,8 +88,6 @@ class external_links_anchor_utils {
 	 **/
 
 	static function ob_flush() {
-		echo '<!-- external-links  ' . 'ob_end_flush' . ' -->' . "\n";
-
 		ob_end_flush();
 	} # ob_flush()
 
@@ -133,8 +127,6 @@ class external_links_anchor_utils {
 	 **/
 
 	function filter($text) {
-		$text = '<!-- external-links  ' . current_filter() . ' -->' . "\n" . $text;
-
 		global $escape_anchor_filter;
 		$escape_anchor_filter = array();
 

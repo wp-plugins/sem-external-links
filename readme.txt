@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.5.4 =
+
+- Remove HTML comments added in 5.4.1 to assist in troubleshooting some select site issues
+
 = 5.5.3 =
 
 - Use template_redirect hook and put ourselves after default hooks that most 404/redirect plugins want to use and Yoast's at priority 99999
