@@ -36,6 +36,10 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 
 == Change Log ==
 
+= 5.5.2 =
+
+- Fix compatibility with Yoast WP SEO plugin when Force Title Rewrite option is on and using the Apply Globally setting of this plugin.
+
 = 5.5.1 =
 
 - Additional tweak to global callback processing
