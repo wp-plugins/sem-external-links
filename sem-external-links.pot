@@ -1,102 +1,149 @@
-# External Links pot file.
-# Copyright (C) 2010 Mesoconcepts <http://www.mesoconcepts.com>
+# Copyright (C) 2014 External Links
 # This file is distributed under the same license as the External Links package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 4.0.5\n"
-"Report-Msgid-Bugs-To: https://tickets.semiologic.com\n"
-"POT-Creation-Date: 2010-05-13 16:35+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Project-Id-Version: External Links 6.0 dev\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/sem-external-links\n"
+"POT-Creation-Date: 2014-11-01 18:01:56+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2014-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
-"Content-Transfer-Encoding: 8bit\n"
 
-#: sem-external-links-admin.php:29
+#: sem-external-links-admin.php:93
 msgid "Settings saved."
 msgstr ""
 
-#: sem-external-links-admin.php:53
-msgid ""
-"Note: Your rel=nofollow preferences is being ignored because the dofollow "
-"plugin is enabled on your site."
+#: sem-external-links-admin.php:117
+msgid "Note: Your rel=nofollow preferences is being ignored because the dofollow plugin is enabled on your site."
 msgstr ""
 
-#: sem-external-links-admin.php:60
+#: sem-external-links-admin.php:122
 msgid "External Links Settings"
 msgstr ""
 
-#: sem-external-links-admin.php:66
+#: sem-external-links-admin.php:128
 msgid "Apply Globally"
 msgstr ""
 
-#: sem-external-links-admin.php:74
-msgid ""
-"Apply these settings to all outbound links, including those in sidebars, "
-"rather than to those in posts and comments."
+#: sem-external-links-admin.php:136
+msgid "Apply these settings to all outbound links on the site except those in scripts, styles and the html head section."
 msgstr ""
 
-#: sem-external-links-admin.php:81
+#: sem-external-links-admin.php:143
+msgid "Apply to Text Widgets"
+msgstr ""
+
+#: sem-external-links-admin.php:151
+msgid "Apply these settings to any text widgets in addition to post, page and comments content."
+msgstr ""
+
+#: sem-external-links-admin.php:158
+msgid "Treat Subdomains as Local"
+msgstr ""
+
+#: sem-external-links-admin.php:166
+msgid "Treat any subdomains for this site as a local link."
+msgstr ""
+
+#: sem-external-links-admin.php:169
+msgid "Example: If your site is at domain.com and you also have store.domain.com, any link to store.domain.com will be treated as local."
+msgstr ""
+
+#: sem-external-links-admin.php:175
+msgid "Auto Convert Text Urls"
+msgstr ""
+
+#: sem-external-links-admin.php:183
+msgid "Automatically converts text urls into clickable urls."
+msgstr ""
+
+#: sem-external-links-admin.php:186
+msgid "Note: If this option is enabled then if www.example.com is found in your text, it will be converted to an html &lt;a&gt; link.\""
+msgstr ""
+
+#: sem-external-links-admin.php:188
+msgid "This conversion will occur first so external link treatment for nofollow, icon and target will be applied to this auto links."
+msgstr ""
+
+#: sem-external-links-admin.php:194
 msgid "Add Icons"
 msgstr ""
 
-#: sem-external-links-admin.php:89
+#: sem-external-links-admin.php:202
 msgid "Mark outbound links with an icon."
 msgstr ""
 
-#: sem-external-links-admin.php:92
-msgid ""
-"Note: You can override this behavior by adding a class=\"no_icon\" to "
-"individual links."
+#: sem-external-links-admin.php:205
+msgid "Note: You can override this behavior by adding a class=\"no_icon\" to individual links."
 msgstr ""
 
-#: sem-external-links-admin.php:98
+#: sem-external-links-admin.php:211
 msgid "Add No Follow"
 msgstr ""
 
-#: sem-external-links-admin.php:106
-msgid "Add a rel=nofollow attribute to outbound links."
+#: sem-external-links-admin.php:219
+msgid "Add a rel=\"nofollow\" attribute to outbound links."
 msgstr ""
 
-#: sem-external-links-admin.php:109
-msgid ""
-"Note: You can override this behavior by adding a rel=\"follow\" to "
-"individual links."
+#: sem-external-links-admin.php:222 sem-external-links-admin.php:241
+msgid "Note: You can override this behavior by adding the attribute rel=\"follow\" to individual links."
 msgstr ""
 
-#: sem-external-links-admin.php:115
+#: sem-external-links-admin.php:224
+msgid "Your rel=\"nofollow\" preferences will be ignored for comments if the \"Do Follow Comment Links\" setting below is enabled or if the standalone Dofollow plugin is enabled on your site."
+msgstr ""
+
+#: sem-external-links-admin.php:230
+msgid "Do Follow Comment Links"
+msgstr ""
+
+#: sem-external-links-admin.php:238
+msgid "Override WordPress' default behavior of adding rel=\"nofollow\" to comment links."
+msgstr ""
+
+#: sem-external-links-admin.php:247
 msgid "Open in New Windows"
 msgstr ""
 
-#: sem-external-links-admin.php:123
+#: sem-external-links-admin.php:255
 msgid "Open outbound links in new windows."
 msgstr ""
 
-#: sem-external-links-admin.php:126
-msgid ""
-"Note: Some usability experts discourage this, claiming that <a href=\"http://"
-"www.useit.com/alertbox/9605.html\">this can damage your visitors' trust</a> "
-"towards your site. Others highlight that computer-illiterate users do not "
-"always know how to use the back button, and encourage the practice for that "
-"reason."
+#: sem-external-links-admin.php:258
+msgid "Note: Some usability experts discourage this, claiming that <a href=\"http://www.useit.com/alertbox/9605.html\">this can damage your visitors' trust</a> towards your site. Others highlight that computer-illiterate users do not always know how to use the back button, and encourage the practice for that reason."
 msgstr ""
 
-#: sem-external-links-admin.php:134
+#: sem-external-links-admin.php:266
 msgid "Save Changes"
 msgstr ""
 
-#: sem-external-links-info.php:2 sem-external-links.php:216
-#: sem-external-links.php:217
+#: sem-external-links-info.php:2 sem-external-links.php:732
+#: sem-external-links.php:733
 msgid "External Links"
 msgstr ""
 
 #: sem-external-links-info.php:3
-msgid ""
-"Marks outbound links as such, with various effects that are configurable "
-"under <a href=\"options-general.php?page=external-links\">Settings / "
-"External Links</a>."
+msgid "Marks outbound links as such, with various effects that are configurable under <a href=\"options-general.php?page=external-links\">Settings / External Links</a>."
+msgstr ""
+#. Plugin Name of the plugin/theme
+msgid "External Links"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "http://www.semiologic.com/software/external-links/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Marks outbound links as such, with various effects that are configurable under <a href=\"options-general.php?page=external-links\">Settings / External Links</a>."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Denis de Bernardy & Mike Koepke"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://www.getsemiologic.com"
 msgstr ""

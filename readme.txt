@@ -14,12 +14,35 @@ The external links plugin for WordPress lets you process outgoing links differen
 
 The external links plugin for WordPress lets you process outgoing links differently from internal links.
 
+= Usage =
+
 Under Settings / External Links, you can configure the plugin to:
 
 - Process all outgoing links, rather than only those within your entries' content and text widgets.
 - Add an external link icon to outgoing links. You can use a class="no_icon" attribute on links to override this.
-- Add rel=nofollow to the links. You can use a rel="follow" attribute on links to override this.
+- Add rel=nofollow to the links. (Note: You can use a rel="follow" attribute on links to override this.)
 - Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
+- Follow comment links (supersedes the nofollow setting in the comment area).
+- Turn on "autolinks" functionality.
+
+
+= Auto Links =
+
+The Autolink functionaity automatically converts urls to hyperlinked urls in post/page content, excerpts and text widgets.
+
+Before:
+
+> www.semiologic.com
+
+After:
+
+> [www.semiologic.com](http://www.semiologic.com)
+
+
+= Follow Comments =
+
+The Follow Comments functionality lets you remove the evil nofollow attribute from your comments.
+
 
 = Help Me! =
 
@@ -34,7 +57,21 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 
+== Frequently Asked Questions ==
+
+= How can I make some links still be followed? =
+
+The plugin supports a non-started rel="follow" attribute on links to override this.  If it detects rel="follow" it will not add the "nofollow" attribute to that link.
+
+
 == Change Log ==
+
+= 6.0 =
+
+- Fixed performance issues with the link processing.  Really was poor.
+- Embedded the functionality of the autolink uri and the dofollow plugins (off by default in Settings)
+- New option on how to treat subdomains of installed plugin domain as local or external
+- Fixed several php strict warnings
 
 = 5.5.4 =
 
@@ -146,3 +183,4 @@ If you require more dedicated assistance, consider using [Semiologic Pro](http:/
 - Enhance escape/unescape methods
 - Localization
 - Code enhancements and optimizations
+

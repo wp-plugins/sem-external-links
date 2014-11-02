@@ -6,12 +6,66 @@
  **/
 
 class external_links_admin {
-    /**
-     * external_links_admin()
-     */
+	/**
+	 * Plugin instance.
+	 *
+	 * @see get_instance()
+	 * @type object
+	 */
+	protected static $instance = NULL;
+
+	/**
+	 * URL to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_url = '';
+
+	/**
+	 * Path to this plugin's directory.
+	 *
+	 * @type string
+	 */
+	public $plugin_path = '';
+
+	/**
+	 * Access this plugin’s working instance
+	 *
+	 * @wp-hook plugins_loaded
+	 * @return  object of this class
+	 */
+	public static function get_instance()
+	{
+		NULL === self::$instance and self::$instance = new self;
+
+		return self::$instance;
+	}
+
+
+	/**
+	 * Constructor.
+	 *
+	 *
+	 */
+
 	public function __construct() {
-        add_action('settings_page_external-links', array($this, 'save_options'), 0);
+		$this->plugin_url    = plugins_url( '/', __FILE__ );
+		$this->plugin_path   = plugin_dir_path( __FILE__ );
+
+		$this->init();
     }
+
+
+	/**
+	 * init()
+	 *
+	 * @return void
+	 **/
+
+	function init() {
+		// register actions and filters
+		add_action('settings_page_external-links', array($this, 'save_options'), 0);
+	}
 
     /**
 	 * save_options()
@@ -23,12 +77,15 @@ class external_links_admin {
 		if ( !$_POST || !current_user_can('manage_options') )
 			return;
 		
-		check_admin_referer('external_links');
+		check_admin_referer('sem_external_links');
 		
-		foreach ( array('global', 'icon', 'target', 'nofollow', 'text_widgets') as $var )
+		foreach ( array('global', 'icon', 'target', 'nofollow', 'text_widgets', 'autolinks',
+			          'follow_comments', 'subdomains_local') as $var )
 			$$var = isset($_POST[$var]);
-		
-		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets'));
+
+		$version = sem_external_links_version;
+		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets',
+			'autolinks', 'follow_comments', 'subdomains_local', 'version'));
 		
 		echo "<div class=\"updated fade\">\n"
 			. "<p>"
@@ -50,9 +107,9 @@ class external_links_admin {
 		echo '<div class="wrap">' . "\n"
 			. '<form method="post" action="">';
 
-		wp_nonce_field('external_links');
+		wp_nonce_field('sem_external_links');
 		
-		$options = external_links::get_options();
+		$options = sem_external_links::get_options();
 		
 		if ( $options['nofollow'] && ( function_exists('strip_nofollow') || class_exists('sem_dofollow') ) ) {
 			echo "<div class=\"error\">\n"
@@ -91,8 +148,44 @@ class external_links_admin {
 				. checked($options['text_widgets'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Apply these settings to all text widgets in addition to those in posts and comments.', 'external-links')
+			. __('Apply these settings to any text widgets in addition to post, page and comments content.', 'external-links')
 			. '</label>'
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Treat Subdomains as Local', 'external-links')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<label>'
+			. '<input type="checkbox" name="subdomains_local"'
+				. checked($options['subdomains_local'], true, false)
+				. ' />'
+			. '&nbsp;'
+			. __('Treat any subdomains for this site as a local link.', 'external-links')
+			. '</label>'
+			. '<br />' . "\n"
+			. '<i>' . __('Example: If your site is at domain.com and you also have store.domain.com, any link to store.domain.com will be treated as local.', 'external-links') . '<i>'
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Auto Convert Text Urls', 'external-links')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<label>'
+			. '<input type="checkbox" name="autolinks"'
+				. checked($options['autolinks'], true, false)
+				. ' />'
+			. '&nbsp;'
+			. __('Automatically converts text urls into clickable urls.', 'external-links')
+			. '</label>'
+			. '<br />' . "\n"
+			. '<i>' . __('Note: If this option is enabled then if www.example.com is found in your text, it will be converted to an html &lt;a&gt; link."', 'external-links')
+			. '<br />' . "\n"
+			. __('This conversion will occur first so external link treatment for nofollow, icon and target will be applied to this auto links.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 
@@ -109,7 +202,7 @@ class external_links_admin {
 			. __('Mark outbound links with an icon.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. __('Note: You can override this behavior by adding a class="no_icon" to individual links.', 'external-links')
+			. '<i>' .__('Note: You can override this behavior by adding a class="no_icon" to individual links.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 		
@@ -123,13 +216,32 @@ class external_links_admin {
 				. checked($options['nofollow'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Add a rel=nofollow attribute to outbound links.', 'external-links')
+			. __('Add a rel="nofollow" attribute to outbound links.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links')
+			. '<i>' . __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links')
+			. '<br />' . "\n"
+			. __('Your rel="nofollow" preferences will be ignored for comments if the "Do Follow Comment Links" setting below is enabled or if the standalone Dofollow plugin is enabled on your site.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 		
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Do Follow Comment Links', 'external-links')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<label>'
+			. '<input type="checkbox" name="follow_comments"'
+				. checked($options['follow_comments'], true, false)
+				. ' />'
+			. '&nbsp;'
+			. __('Override WordPress\' default behavior of adding rel="nofollow" to comment links.', 'external-links')
+			. '</label>'
+			. '<br />' . "\n"
+			. '<i>' . __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links') . '</i>'
+			. '</td>' . "\n"
+			. '</tr>' . "\n";
+
 		echo '<tr>' . "\n"
 			. '<th scope="row">'
 			. __('Open in New Windows', 'external-links')
@@ -143,10 +255,10 @@ class external_links_admin {
 			. __('Open outbound links in new windows.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitors\' trust</a> towards your site. Others highlight that computer-illiterate users do not always know how to use the back button, and encourage the practice for that reason.', 'external-links')
+			. '<i>' . __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitors\' trust</a> towards your site. Others highlight that computer-illiterate users do not always know how to use the back button, and encourage the practice for that reason.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
-		
+
 		echo '</table>' . "\n";
 		
 		echo '<p class="submit">'
@@ -160,4 +272,4 @@ class external_links_admin {
 	} # edit_options()
 } # external_links_admin
 
-$external_links_admin = new external_links_admin();
+$external_links_admin = external_links_admin::get_instance();
