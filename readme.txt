@@ -66,6 +66,10 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 == Change Log ==
 
+= 6.0.1 =
+
+- Well plugin decided to break classes on embedded images.  Obviously corrected.
+
 = 6.0 =
 
 - Fixed performance issues with the link processing.  Really was poor.
