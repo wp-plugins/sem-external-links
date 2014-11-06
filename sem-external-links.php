@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.0.1
+Version: 6.1
 Author: Denis de Bernardy & Mike Koepke
 Author URI: http://www.getsemiologic.com
 Text Domain: external-links
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.0.1');
+define('sem_external_links_version', '6.1');
 
 /**
  * external_links
@@ -118,11 +118,6 @@ class sem_external_links {
 
 			if ( $this->opts['icon'] )
 				add_action('wp_enqueue_scripts', array($this, 'styles'), 5);
-
-			if ( $this->opts['follow_comments'] ) {
-				if ( !class_exists('sem_follow_comment') )
-				    include $this->plugin_path . '/sem-follow_comment.php';
-			}
 
 			if ( $this->opts['autolinks'] ) {
 				if ( !class_exists('sem_autolink_uri') )
@@ -538,13 +533,10 @@ class sem_external_links {
 			$updated = true;
 		}
 
-		if ( $this->opts['nofollow'] && ( current_filter() == 'comment_text')
-			&& !function_exists('strip_nofollow')
-			&& !class_exists('sem_dofollow') && !class_exists('sem_follow_comment')
-			&& !in_array('nofollow', $anchor['attr']['rel'])
+		if ( $this->opts['nofollow'] && !in_array('nofollow', $anchor['attr']['rel'])
 			&& !in_array('follow', $anchor['attr']['rel']) ) {
-			$anchor['attr']['rel'][] = 'nofollow';
-			$updated = true;
+				$anchor['attr']['rel'][] = 'nofollow';
+				$updated = true;
 		}
 
 		if ( $this->opts['target'] && empty($anchor['attr']['target']) ) {
@@ -731,7 +723,6 @@ class sem_external_links {
 					'nofollow' => true,
 					'text_widgets' => true,
 					'autolinks' => false,
-					'follow_comments' => false,
 					'subdomains_local' => true,
 					'version' => sem_external_links_version,
 					);
@@ -742,8 +733,6 @@ class sem_external_links {
 			$updated_opts = wp_parse_args($o, $defaults);
 
 		if ( !isset( $o['version'] )) {
-			if ( sem_external_links::replace_plugin('sem-dofollow/sem-dofollow.php') )
-				$updated_opts['follow_comments'] = true;
 
 			if ( sem_external_links::replace_plugin('sem-autolink-uri/sem-autolink-uri.php') )
 				$updated_opts['autolinks'] = true;

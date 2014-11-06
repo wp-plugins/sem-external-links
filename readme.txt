@@ -22,13 +22,12 @@ Under Settings / External Links, you can configure the plugin to:
 - Add an external link icon to outgoing links. You can use a class="no_icon" attribute on links to override this.
 - Add rel=nofollow to the links. (Note: You can use a rel="follow" attribute on links to override this.)
 - Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
-- Follow comment links (supersedes the nofollow setting in the comment area).
 - Turn on "autolinks" functionality.
 
 
 = Auto Links =
 
-The Autolink functionaity automatically converts urls to hyperlinked urls in post/page content, excerpts and text widgets.
+The Autolink functionality automatically converts urls to hyperlinked urls in post/page content, excerpts and text widgets.
 
 Before:
 
@@ -37,11 +36,6 @@ Before:
 After:
 
 > [www.semiologic.com](http://www.semiologic.com)
-
-
-= Follow Comments =
-
-The Follow Comments functionality lets you remove the evil nofollow attribute from your comments.
 
 
 = Help Me! =
@@ -65,6 +59,11 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 
 == Change Log ==
+
+= 6.1 =
+
+- The nofollow attribute was not being set if a certain combination of the global, follow comments, set nofollow settings were set.
+- Backtracked and removed the Follow Comments functionality.   It's usage was limited to certain cases and if Apply Globally was on, then it was disabled.  Supporting it was adding too complex logic.
 
 = 6.0.1 =
 

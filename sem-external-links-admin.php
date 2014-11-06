@@ -80,12 +80,12 @@ class external_links_admin {
 		check_admin_referer('sem_external_links');
 		
 		foreach ( array('global', 'icon', 'target', 'nofollow', 'text_widgets', 'autolinks',
-			          'follow_comments', 'subdomains_local') as $var )
+			          'subdomains_local') as $var )
 			$$var = isset($_POST[$var]);
 
 		$version = sem_external_links_version;
 		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets',
-			'autolinks', 'follow_comments', 'subdomains_local', 'version'));
+			'autolinks', 'subdomains_local', 'version'));
 		
 		echo "<div class=\"updated fade\">\n"
 			. "<p>"
@@ -188,23 +188,6 @@ class external_links_admin {
 			. __('This conversion will occur first so external link treatment for nofollow, icon and target will be applied to this auto links.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
-
-		echo '<tr>' . "\n"
-			. '<th scope="row">'
-			. __('Add Icons', 'external-links')
-			. '</th>' . "\n"
-			. '<td>'
-			. '<label>'
-			. '<input type="checkbox" name="icon"'
-				. checked($options['icon'], true, false)
-				. ' />'
-			. '&nbsp;'
-			. __('Mark outbound links with an icon.', 'external-links')
-			. '</label>'
-			. '<br />' . "\n"
-			. '<i>' .__('Note: You can override this behavior by adding a class="no_icon" to individual links.', 'external-links') . '</i>'
-			. '</td>' . "\n"
-			. '</tr>' . "\n";
 		
 		echo '<tr>' . "\n"
 			. '<th scope="row">'
@@ -220,25 +203,23 @@ class external_links_admin {
 			. '</label>'
 			. '<br />' . "\n"
 			. '<i>' . __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links')
-			. '<br />' . "\n"
-			. __('Your rel="nofollow" preferences will be ignored for comments if the "Do Follow Comment Links" setting below is enabled or if the standalone Dofollow plugin is enabled on your site.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
-		
+
 		echo '<tr>' . "\n"
 			. '<th scope="row">'
-			. __('Do Follow Comment Links', 'external-links')
+			. __('Add Icons', 'external-links')
 			. '</th>' . "\n"
 			. '<td>'
 			. '<label>'
-			. '<input type="checkbox" name="follow_comments"'
-				. checked($options['follow_comments'], true, false)
+			. '<input type="checkbox" name="icon"'
+				. checked($options['icon'], true, false)
 				. ' />'
 			. '&nbsp;'
-			. __('Override WordPress\' default behavior of adding rel="nofollow" to comment links.', 'external-links')
+			. __('Mark outbound links with an icon.', 'external-links')
 			. '</label>'
 			. '<br />' . "\n"
-			. '<i>' . __('Note: You can override this behavior by adding the attribute rel="follow" to individual links.', 'external-links') . '</i>'
+			. '<i>' .__('Note: You can override this behavior by adding a class="no_icon" or "noicon" to individual links.', 'external-links') . '</i>'
 			. '</td>' . "\n"
 			. '</tr>' . "\n";
 
