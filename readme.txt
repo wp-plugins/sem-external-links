@@ -60,6 +60,14 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 == Change Log ==
 
+= 6.2 =
+
+- Additional performance changes for long post/page when Apply Globally is off.
+- Links with no anchor text will have nofollow and/or target set, but no external icon
+- Improved detection and handling of anchor links as internal.
+- Initial support for AddThis placeholder links
+
+
 = 6.1 =
 
 - The nofollow attribute was not being set if a certain combination of the global, follow comments, set nofollow settings were set.

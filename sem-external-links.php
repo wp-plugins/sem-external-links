@@ -3,9 +3,9 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.1
+Version: 6.2
 Author: Denis de Bernardy & Mike Koepke
-Author URI: http://www.getsemiologic.com
+Author URI: https://www.semiologic.com
 Text Domain: external-links
 Domain Path: /lang
 License: Dual licensed under the MIT and GPLv2 licenses
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.1');
+define('sem_external_links_version', '6.2');
 
 /**
  * external_links
@@ -131,11 +131,11 @@ class sem_external_links {
 				$this->anchor_utils = new external_links_anchor_utils( $this );
 			}
 			else {
-				add_filter('the_content', array($this, 'process_content'), 1000000);
-				add_filter('the_excerpt', array($this, 'process_content'), 1000000);
-				add_filter('comment_text', array($this, 'process_content'), 1000000);
+				add_filter('the_content', array($this, 'process_content_content'), 100000);
+//				add_filter('the_excerpt', array($this, 'process_content_excerpt'), 100000);
+				add_filter('comment_text', array($this, 'process_content_comment'), 100000);
 				if ( $inc_text_widgets )
-					add_filter('widget_text', array($this, 'process_content'), 1000000);
+					add_filter('widget_text', array($this, 'process_content_widget'), 100000);
 			}
 		}
 		else {
@@ -169,19 +169,23 @@ class sem_external_links {
 	 * process_content()
 	 *
 	 * @param string $text
+	 * @param string $context
 	 * @return string $text
 	 **/
 
-	function process_content($text) {
+	function process_content($text, $context = "global") {
 
 		// short circuit if there's no anchors at all in the text
 		if ( false === stripos($text, '<a ') )
 			return($text);
 
-		global $escape_anchor_filter;
-		$escape_anchor_filter = array();
+		$escape_needed = array( 'global', 'content', 'widgets' );
+		if ( in_array($context, $escape_needed ) ) {
+			global $escape_anchor_filter;
+			$escape_anchor_filter = array();
 
-		$text = $this->escape($text);
+			$text = $this->escape($text, $context);
+		}
 
 		// find all occurrences of anchors and fill matches with links
 		preg_match_all("/
@@ -207,36 +211,87 @@ class sem_external_links {
 		if ( !empty($raw_links) && !empty($processed_links) )
 			$text = str_replace($raw_links, $processed_links, $text);
 
-		$text = $this->unescape($text);
+		if ( in_array($context, $escape_needed ) ) {
+			$text = $this->unescape($text);
+		}
 
 		return $text;
 	} # process_content()
 
 
 	/**
-	 * escape()
+	 * process_content_comment()
 	 *
 	 * @param string $text
 	 * @return string $text
 	 **/
 
-	function escape($text) {
+	function process_content_comment($text) {
+		return $this->process_content( $text, 'comment' );
+	}
+
+	/**
+	 * process_content_content()
+	 *
+	 * @param string $text
+	 * @return string $text
+	 **/
+
+	function process_content_content($text) {
+		return $this->process_content( $text, 'content' );
+	}
+
+	/**
+	 * process_content_excerpt()
+	 *
+	 * @param string $text
+	 * @return string $text
+	 **/
+
+	function process_content_excerpt($text) {
+		return $this->process_content( $text, 'excerpt' );
+	}
+
+	/**
+	 * process_content_widget()
+	 *
+	 * @param string $text
+	 * @return string $text
+	 **/
+
+	function process_content_widget($text) {
+		return $this->process_content( $text, 'widget' );
+	}
+
+	/**
+	 * escape()
+	 *
+	 * @param string $text
+	 * @param string $context
+	 * @return string $text
+	 **/
+
+	function escape($text, $context) {
 		global $escape_anchor_filter;
 
 		if ( !isset($escape_anchor_filter) )
 			$escape_anchor_filter = array();
 
-		foreach ( array(
-			'head' => "/
-				.*?
-				<\s*\/\s*head\s*>
-				/isx",
-			'blocks' => "/
-				<\s*(script|style|object|textarea)(?:\s.*?)?>
-				.*?
-				<\s*\/\s*\\1\s*>
-				/isx",
-			) as $regex ) {
+		$exclusions = array();
+
+		if ( $context == 'global' )
+			$exclusions['head'] = "/
+							.*?
+							<\s*\/\s*head\s*>
+							/isx";
+
+		$exclusions['blocks'] = "/
+						<\s*(script|style|object|textarea)(?:\s.*?)?>
+						.*?
+						<\s*\/\s*\\1\s*>
+						/isx";
+
+		foreach ( $exclusions as $regex ) {
 			$text = preg_replace_callback($regex, array($this, 'escape_callback'), $text);
 		}
 
@@ -288,21 +343,17 @@ class sem_external_links {
 	 **/
 
 	function process_link($match) {
-		# skip empty anchors
-		if ( !trim($match[2]) )
-			return $match[0];
-
 		# parse anchor
 		$anchor = $this->parse_anchor($match);
 
 		if ( !$anchor )
-			return $match[0];
+			return false;
 
 		# filter anchor
 		$anchor = $this->filter_anchor( $anchor );
 
 		if ( $anchor )
-			$anchor = $this->build_anchor($anchor);
+			$anchor = $this->build_anchor($match[0], $anchor);
 
 		return $anchor;
 	} # process_link()
@@ -317,7 +368,8 @@ class sem_external_links {
 
 	function parse_anchor($match) {
 		$anchor = array();
-		$anchor['attr'] = $this->parse_attrs( $match[1] );
+//		$anchor['attr'] = $this->parse_attrs( $match[1] );
+		$anchor['attr'] = $this->parseAttributes( $match[1] );
 
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
 			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
@@ -343,128 +395,35 @@ class sem_external_links {
 	/**
 	 * build_anchor()
 	 *
+	 * @param $link
 	 * @param array $anchor
 	 * @return string $anchor
 	 */
 
-	function build_anchor($anchor) {
-		$anchor['attr']['href'] = esc_url($anchor['attr']['href']);
+	function build_anchor($link, $anchor) {
 
-		$str = '<a';
-		foreach ( $anchor['attr'] as $k => $v ) {
-			if ( is_array($v) ) {
-				$v = array_unique($v);
-				if ( $v )
-					$str .= ' ' . $k . '="' . implode(' ', $v) . '"';
-			} else {
-               if ($k)
-				    $str .= ' ' . $k . '="' . $v . '"';
-               else
-                    $str .= ' ' . $v;
+		$attrs = array( 'class', 'rel', 'target');
+
+		foreach ( $attrs as $attr ) {
+			if ( isset($anchor['attr'][$attr]) ) {
+				$new_attr_value = null;
+				$values = $anchor['attr'][$attr];
+				if ( is_array($values) ) {
+					$values = array_unique($values);
+					if ( $values )
+						$new_attr_value = implode(' ',  $values );
+				} else {
+					$new_attr_value = $values;
+				}
+
+				if ( $new_attr_value )
+					$link = $this->update_attribute($link, $attr, $new_attr_value);
 			}
 		}
-		$str .= '>' . $anchor['body'] . '</a>';
 
-		return $str;
+		return $link;
 	} # build_anchor()
 
-	/**
-	 * Parse an attributes string into an array. If the string starts with a tag,
-	 * then the attributes on the first tag are parsed. This parses via a manual
-	 * loop and is designed to be safer than using DOMDocument.
-	 *
-	 * @param    string|*   $attrs
-	 * @return   array
-	 *
-	 * @example  parse_attrs( 'src="example.jpg" alt="example"' )
-	 * @example  parse_attrs( '<img src="example.jpg" alt="example">' )
-	 * @example  parse_attrs( '<a href="example"></a>' )
-	 * @example  parse_attrs( '<a href="example">' )
-	 */
-	function parse_attrs($attrs) {
-
-	    if ( !is_scalar($attrs) )
-	        return (array) $attrs;
-
-	    $attrs = str_split( trim($attrs) );
-
-	    if ( '<' === $attrs[0] ) # looks like a tag so strip the tagname
-	        while ( $attrs && ! ctype_space($attrs[0]) && $attrs[0] !== '>' )
-	            array_shift($attrs);
-
-	    $arr = array(); # output
-	    $name = '';     # for the current attr being parsed
-	    $value = '';    # for the current attr being parsed
-	    $mode = 0;      # whether current char is part of the name (-), the value (+), or neither (0)
-	    $stop = false;  # delimiter for the current $value being parsed
-	    $space = ' ';   # a single space
-		$paren = 0;     # in parenthesis for js attrs
-
-	    foreach ( $attrs as $j => $curr ) {
-
-	        if ( $mode < 0 ) {# name
-	            if ( '=' === $curr ) {
-	                $mode = 1;
-	                $stop = false;
-	            } elseif ( '>' === $curr ) {
-	                '' === $name or $arr[ $name ] = $value;
-	                break;
-	            } elseif ( !ctype_space($curr) ) {
-	                if ( ctype_space( $attrs[ $j - 1 ] ) ) { # previous char
-	                    '' === $name or $arr[ $name ] = '';   # previous name
-	                    $name = $curr;                        # initiate new
-	                } else {
-	                    $name .= $curr;
-	                }
-	            }
-	        } elseif ( $mode > 0 ) {# value
-		        if ( $paren ) {
-			        $value .= $curr;
-                    if ( $curr === "(")
-                        $paren += 1;
-                    elseif ( $curr === ")")
-                        $paren -= 1;
-		        }
-		        else {
-		            if ( $stop === false ) {
-		                if ( !ctype_space($curr) ) {
-		                    if ( '"' === $curr || "'" === $curr ) {
-		                        $value = '';
-		                        $stop = $curr;
-		                    } else {
-		                        $value = $curr;
-		                        $stop = $space;
-		                    }
-		                }
-		            } elseif ( $stop === $space ? ctype_space($curr) : $curr === $stop ) {
-		                $arr[ $name ] = $value;
-		                $mode = 0;
-		                $name = $value = '';
-		            } else {
-		                $value .= $curr;
-			            if ( $curr === "(")
-	                        $paren += 1;
-	                    elseif ( $curr === ")")
-	                        $paren -= 1;
-		            }
-		        }
-	        } else {# neither
-
-	            if ( '>' === $curr )
-	                break;
-	            if ( !ctype_space( $curr ) ) {
-	                # initiate
-	                $name = $curr;
-	                $mode = -1;
-	            }
-	        }
-	    }
-
-	    # incl the final pair if it was quoteless
-	    '' === $name or $arr[ $name ] = $value;
-
-	    return $arr;
-	}
 
 	/**
 	 * Updates attribute of an HTML tag.
@@ -479,8 +438,8 @@ class sem_external_links {
 		$attr_value     = false;
 		$quote          = false; // quotes to wrap attribute values
 
-		if (preg_match('/\s' . $attr_name . '="([^"]*)"/iu', $html, $matches)
-			|| preg_match('/\s' . $attr_name . "='([^']*)'/iu", $html, $matches)
+		if (preg_match('/<\s*a\s+' . $attr_name . '="([^"]*)\s*>"/iu', $html, $matches)
+			|| preg_match('/<\s*a\s+' . $attr_name . "='([^']*)\s*>'/iu", $html, $matches)
 		) {
 			// two possible ways to get existing attributes
 			$attr_value = $matches[1];
@@ -491,15 +450,19 @@ class sem_external_links {
 		if ($attr_value)
 		{
 			//replace current attribute
-			return str_ireplace("$attr_name=" . $quote . "$attr_value" . $quote,
+			$html = str_ireplace("$attr_name=" . $quote . "$attr_value" . $quote,
 				$attr_name . '="' . esc_attr($new_attr_value) . '"', $html);
 		}
 		else {
 			// attribute does not currently exist, add it
-			return str_ireplace('>', " $attr_name=\"" . esc_attr($new_attr_value) . '">', $html);
+			$pos = strpos( $html, '>' );
+			if ($pos !== false) {
+				$html = substr_replace( $html, " $attr_name=\"" . esc_attr($new_attr_value) . '">', $pos, strlen('>') );
+			}
 		}
-	} # update_attribute()
 
+		return $html;
+	} # update_attribute()
 
 	/**
 	 * filter_anchor()
@@ -513,12 +476,37 @@ class sem_external_links {
 		if ( is_feed() )
 			return null;
 
+		// if we don't have a href or find a ? only obviously this some illformed or temp link
+		if ( empty( $anchor['attr']['href'] ) || (substr($anchor['attr']['href'], 0, 1) == '?' ) )
+			return null;
+
+		// we have a placeholder link.    Normally treat as a local but there are exceptions like add this
+		if ( substr($anchor['attr']['href'], 0, 1) == '#' ) {
+			// now is this a full blown anchor?
+			if ( strlen( $anchor['attr']['href'] ) > 1 ) {
+				// yep, bail
+				return null;
+			}
+
+			// can we find addthis_button class?  if so then don't bail and process external
+			$addthis = false;
+			foreach( $anchor['attr']['class'] as $c => $class) {
+				$pos = strpos( $class, "addthis_button" );
+				if ( null !== $pos ) {
+					$addthis = true;
+					break;
+				}
+			}
+			// no addthis.  bail as we got just a an anchor only
+			if ( !$addthis )
+				return null;
+		}
 		# ignore local urls
-		if ( sem_external_links::is_local_url($anchor['attr']['href']) )
+		elseif ( sem_external_links::is_local_url($anchor['attr']['href']) )
 			return null;
 
 		# no icons for images
-		$is_image = (bool) preg_match("/^\s*<\s*img\s.+?>\s*$/is", $anchor['body']);
+		$is_image = ( false !== strpos($anchor['body'], "<img ") );
 
 		$updated = false;
 		if ( !in_array('external', $anchor['attr']['class']) ) {
@@ -529,8 +517,11 @@ class sem_external_links {
 		if ( !$is_image && $this->opts['icon'] && !in_array('external_icon', $anchor['attr']['class'])
 			&& !in_array('no_icon', $anchor['attr']['class'])
 			&& !in_array('noicon', $anchor['attr']['class']) ) {
-			$anchor['attr']['class'][] = 'external_icon';
-			$updated = true;
+			// don't add an icon if there is no text in the link
+			if ($anchor['body'] != null) {
+				$anchor['attr']['class'][] = 'external_icon';
+				$updated = true;
+			}
 		}
 
 		if ( $this->opts['nofollow'] && !in_array('nofollow', $anchor['attr']['rel'])
@@ -551,6 +542,28 @@ class sem_external_links {
 	} # filter_anchor()
 
 
+	function parseAttributes($text) {
+	    $attributes = array();
+	    $pattern = '#(?(DEFINE)
+	            (?<name>[a-zA-Z][a-zA-Z0-9-:]*)
+	            (?<value_double>"[^"]+")
+	            (?<value_single>\'[^\']+\')
+	            (?<value_none>[^\s>]+)
+	            (?<value>((?&value_double)|(?&value_single)|(?&value_none)))
+	        )
+	        (?<n>(?&name))(=(?<v>(?&value)))?#xs';
+
+	    if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
+	        foreach ($matches as $match) {
+	            $attributes[$match['n']] = isset($match['v'])
+	                ? trim($match['v'], '\'"')
+	                : null;
+	        }
+	    }
+
+	    return $attributes;
+	}
+
 	/**
 	 * is_local_url()
 	 *
@@ -559,17 +572,15 @@ class sem_external_links {
 	 **/
 
 	function is_local_url($url) {
-		if ( in_array(substr($url, 0, 1), array('?', '#')) )
-			return true;
-		elseif ( (substr($url, 0, 2) != '//') && (strpos($url, 'http://') === false) && (strpos($url, 'https://') === false) )
+		if ( (substr($url, 0, 2) != '//') && (strpos($url, 'http://') === false) && (strpos($url, 'https://') === false) )
 			return true;
 		elseif ( $url == 'http://' || $url == 'https://' )
 			return true;
 		elseif ( preg_match("~/go(/|\.)~i", $url) )
 			return false;
-		
+
 		static $site_domain;
-		
+
 		if ( !isset($site_domain) ) {
 			$site_domain = home_url();
 			$site_domain = parse_url($site_domain);
@@ -583,7 +594,7 @@ class sem_external_links {
                     return false;
             }
 			$site_domain = preg_replace("/^www\./i", '', $site_domain);
-			
+
 			# The following is not bullet proof, but it's good enough for a WP site
 			if ( $site_domain != 'localhost' && !preg_match("/\d+(\.\d+){3}/", $site_domain) ) {
 				if ( preg_match("/\.([^.]+)$/", $site_domain, $tld) ) {
@@ -592,9 +603,9 @@ class sem_external_links {
 					$site_domain = false;
 					return false;
 				}
-				
+
 				$site_domain = substr($site_domain, 0, strlen($site_domain) - 1 - strlen($tld));
-				
+
 				if ( preg_match("/\.([^.]+)$/", $site_domain, $subtld) ) {
 					$subtld = end($subtld);
 					if ( strlen($subtld) <= 4 ) {
@@ -606,16 +617,16 @@ class sem_external_links {
 						$site_domain = $subtld;
 					}
 				}
-				
+
 				$site_domain .= ".$tld";
 			}
-			
+
 			$site_domain = strtolower($site_domain);
 		}
-		
+
 		if ( !$site_domain )
 			return false;
-		
+
 		$link_domain = @parse_url($url);
         if ($link_domain === false)
             return true;
@@ -633,7 +644,7 @@ class sem_external_links {
 			if ( $subdomains != '')
 				$link_domain = str_replace($subdomains . '.', '', $link_domain);
 		}
-		
+
 		if ( $site_domain == $link_domain ) {
 			return true;
 		} elseif ( function_exists('is_multisite') && is_multisite() ) {
