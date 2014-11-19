@@ -60,6 +60,11 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 == Change Log ==
 
+= 6.3 =
+
+- Changed link detection to err on the side of a link being local rather than external to avoid false positives.
+- Fixed double inclusion of class attribute under certain link attribute ordering conditions
+
 = 6.2 =
 
 - Additional performance changes for long post/page when Apply Globally is off.

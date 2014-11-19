@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.2
+Version: 6.3
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
 Text Domain: external-links
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.2');
+define('sem_external_links_version', '6.3');
 
 /**
  * external_links
@@ -368,7 +368,6 @@ class sem_external_links {
 
 	function parse_anchor($match) {
 		$anchor = array();
-//		$anchor['attr'] = $this->parse_attrs( $match[1] );
 		$anchor['attr'] = $this->parseAttributes( $match[1] );
 
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
@@ -438,11 +437,11 @@ class sem_external_links {
 		$attr_value     = false;
 		$quote          = false; // quotes to wrap attribute values
 
-		if (preg_match('/<\s*a\s+' . $attr_name . '="([^"]*)\s*>"/iu', $html, $matches)
-			|| preg_match('/<\s*a\s+' . $attr_name . "='([^']*)\s*>'/iu", $html, $matches)
+		$re = '/' . preg_quote($attr_name) . '=([\'"])?((?(1).+?|[^\s>]+))(?(1)\1)/is';
+		if (preg_match($re, $html, $matches)
 		) {
 			// two possible ways to get existing attributes
-			$attr_value = $matches[1];
+			$attr_value = $matches[2];
 
 			$quote = false !== stripos($html, $attr_name . "='") ? "'" : '"';
 		}
@@ -502,7 +501,7 @@ class sem_external_links {
 				return null;
 		}
 		# ignore local urls
-		elseif ( sem_external_links::is_local_url($anchor['attr']['href']) )
+		elseif ( !sem_external_links::is_external($anchor['attr']['href']) )
 			return null;
 
 		# no icons for images
@@ -565,19 +564,23 @@ class sem_external_links {
 	}
 
 	/**
-	 * is_local_url()
+	 * is_external()
 	 *
 	 * @param string $url
-	 * @return bool $is_local_url
+	 * @return bool $is_external
 	 **/
 
-	function is_local_url($url) {
-		if ( (substr($url, 0, 2) != '//') && (strpos($url, 'http://') === false) && (strpos($url, 'https://') === false) )
-			return true;
-		elseif ( $url == 'http://' || $url == 'https://' )
-			return true;
-		elseif ( preg_match("~/go(/|\.)~i", $url) )
+	function is_external($url) {
+		if ( (substr($url, 0, 2) != '//') && (strpos($url, 'http://') !== false)
+			&& (strpos($url, 'https://') !== false) )
 			return false;
+
+		if ( $url == 'http://' || $url == 'https://' )
+			return false;
+
+/*		if ( preg_match("~/go(/|\.)~i", $url) )
+			return false;
+*/
 
 		static $site_domain;
 
@@ -593,7 +596,7 @@ class sem_external_links {
                 else
                     return false;
             }
-			$site_domain = preg_replace("/^www\./i", '', $site_domain);
+			$site_domain = str_replace('www.', '', $site_domain);
 
 			# The following is not bullet proof, but it's good enough for a WP site
 			if ( $site_domain != 'localhost' && !preg_match("/\d+(\.\d+){3}/", $site_domain) ) {
@@ -646,11 +649,11 @@ class sem_external_links {
 		}
 
 		if ( $site_domain == $link_domain ) {
-			return true;
+			return false;
 		} elseif ( function_exists('is_multisite') && is_multisite() ) {
 			return false;
-		} else {
-			return false;
+		}
+/*		else {
 			$site_elts = explode('.', $site_domain);
 			$link_elts = explode('.', $link_domain);
 
@@ -660,10 +663,12 @@ class sem_external_links {
 			}
 
 			return empty($link_elts) || empty($site_elts);
-
 		}
-	} # is_local_url()
-	
+*/
+		// we made it to the end so we must have an external link
+	    return true;
+	} # is_external()
+
 	/**
 	 * extract_domain()
 	 *
