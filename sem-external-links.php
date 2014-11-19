@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.3
+Version: 6.3.1
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
 Text Domain: external-links
@@ -437,8 +437,14 @@ class sem_external_links {
 		$attr_value     = false;
 		$quote          = false; // quotes to wrap attribute values
 
+		preg_match('/(<a.*>)/iU', $html, $match);
+
+		$link_str = $match[1];
+		if ($link_str == "")
+			return $html;
+
 		$re = '/' . preg_quote($attr_name) . '=([\'"])?((?(1).+?|[^\s>]+))(?(1)\1)/is';
-		if (preg_match($re, $html, $matches)
+		if (preg_match($re, $link_str, $matches)
 		) {
 			// two possible ways to get existing attributes
 			$attr_value = $matches[2];

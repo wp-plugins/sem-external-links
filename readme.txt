@@ -60,6 +60,10 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 == Change Log ==
 
+= 6.3.1 =
+
+- Fix bug that crept back in with embedded image with a class while the link itself had no class attribute
+
 = 6.3 =
 
 - Changed link detection to err on the side of a link being local rather than external to avoid false positives.
