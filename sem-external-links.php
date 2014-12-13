@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.3.1
+Version: 6.4
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
 Text Domain: external-links
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.3');
+define('sem_external_links_version', '6.4');
 
 /**
  * external_links
@@ -648,6 +648,14 @@ class sem_external_links {
 
 		$link_domain = strtolower($link_domain);
 		$link_domain = str_replace('www.', '', $link_domain);
+
+		if ( isset($this->opts['exclude_domains']) ) {
+			$exclude_domains = explode( ',', $this->opts['exclude_domains'] );
+			$dom = $this->extract_domain($link_domain);
+			if ( in_array( $dom, $exclude_domains) )
+				return false;
+		}
+
 		if ( $this->opts['subdomains_local'] ) {
 			$subdomains = $this->extract_subdomains($link_domain);
 			if ( $subdomains != '')
@@ -656,10 +664,12 @@ class sem_external_links {
 
 		if ( $site_domain == $link_domain ) {
 			return false;
-		} elseif ( function_exists('is_multisite') && is_multisite() ) {
+		}
+
+/*			elseif ( function_exists('is_multisite') && is_multisite() ) {
 			return false;
 		}
-/*		else {
+		else {
 			$site_elts = explode('.', $site_domain);
 			$link_elts = explode('.', $link_domain);
 
@@ -707,6 +717,18 @@ class sem_external_links {
 	    return $subdomains;
 	} # extract_subdomains()
 
+	/**
+	 * is_valid_domain_name()
+	 *
+	 * @param string $domain_name
+	 * @return bool
+	 **/
+	function is_valid_domain_name($domain_name)
+	{
+	    return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain_name) //valid chars check
+	            && preg_match("/^.{1,253}$/", $domain_name) //overall length check
+	            && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain_name)   ); //length of each label
+	}
 
 	/**
 	 * get_options
@@ -723,6 +745,9 @@ class sem_external_links {
 		$o = get_option('external_links');
 
 		if ( $o === false || !isset($o['text_widgets']) || !isset($o['autolinks']) || !isset($o['version']) )
+			$o = sem_external_links::init_options();
+
+		if ( version_compare( sem_external_links_version, $o['version'], '>' ) )
 			$o = sem_external_links::init_options();
 
 		return $o;
@@ -747,6 +772,7 @@ class sem_external_links {
 					'autolinks' => false,
 					'subdomains_local' => true,
 					'version' => sem_external_links_version,
+					'exclude_domains' => '',
 					);
 
 		if ( !$o )
@@ -759,6 +785,8 @@ class sem_external_links {
 			if ( sem_external_links::replace_plugin('sem-autolink-uri/sem-autolink-uri.php') )
 				$updated_opts['autolinks'] = true;
 		}
+
+		$o['version'] = sem_external_links_version;
 
 		update_option('external_links', $updated_opts);
 

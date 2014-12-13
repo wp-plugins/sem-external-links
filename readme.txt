@@ -3,7 +3,7 @@ Contributors: Denis-de-Bernardy, Mike_Koepke
 Donate link: http://www.semiologic.com/partners/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 3.9
+Tested up to: 4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,12 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 
 == Change Log ==
+
+= 6.4 =
+
+- New setting to specify domain(s) to be excluded from any processing.  props Brian Wilson
+- Remove multi-site check that was causing all links to be deemed internal.
+- WP 4.1 Compat
 
 = 6.3.1 =
 

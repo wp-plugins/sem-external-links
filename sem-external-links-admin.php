@@ -83,9 +83,25 @@ class external_links_admin {
 			          'subdomains_local') as $var )
 			$$var = isset($_POST[$var]);
 
+		$exclude_domains = stripslashes($_POST['exclude_domains']);
+		$domains = explode( ',', $exclude_domains );
+		$exclude_domains = array();
+
+		global $sem_external_links;
+		foreach( $domains as $num => $domain ) {
+			$domain = trim($domain);
+			if (  $sem_external_links->is_valid_domain_name($domain)) {
+				$domain = $sem_external_links->extract_domain( $domain );
+				if ( !in_array( $domain, $exclude_domains) )
+					$exclude_domains[] = $domain;
+			}
+		}
+
+		$exclude_domains = implode( ',', $exclude_domains );
+
 		$version = sem_external_links_version;
 		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets',
-			'autolinks', 'subdomains_local', 'version'));
+			'autolinks', 'subdomains_local', 'version', 'exclude_domains'));
 		
 		echo "<div class=\"updated fade\">\n"
 			. "<p>"
@@ -238,6 +254,23 @@ class external_links_admin {
 			. '<br />' . "\n"
 			. '<i>' . __('Note: Some usability experts discourage this, claiming that <a href="http://www.useit.com/alertbox/9605.html">this can damage your visitors\' trust</a> towards your site. Others highlight that computer-illiterate users do not always know how to use the back button, and encourage the practice for that reason.', 'external-links') . '</i>'
 			. '</td>' . "\n"
+			. '</tr>' . "\n";
+
+		echo '<tr>' . "\n"
+			. '<th scope="row">'
+			. __('Domains to Exclude', 'external-links')
+			. '</th>' . "\n"
+			. '<td>'
+			. '<label>'
+			. __('External site domains that should be excluded from processing:', 'external-links')
+			. '<textarea name="exclude_domains" cols="58" rows="4" class="widefat">'
+			. esc_html($options['exclude_domains'])
+			. '</textarea>' . "\n"
+			. __('Domains should be separated by a comma and entered as the base domain only. &nbsp;http://, https://, www. should not be included and will be stripped off.', 'external-links')
+			. '</label>&nbsp;&nbsp;'
+			. '<i>' .__('Example: domain.com, domain.net, somesite.com, external.org.', 'external-links') . '</i>'
+			. '<br />' . "\n"
+			. '</td>'
 			. '</tr>' . "\n";
 
 		echo '</table>' . "\n";

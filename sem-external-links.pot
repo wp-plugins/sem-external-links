@@ -2,10 +2,10 @@
 # This file is distributed under the same license as the External Links package.
 msgid ""
 msgstr ""
-"Project-Id-Version: External Links 6.1\n"
+"Project-Id-Version: External Links 6.4\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/sem-external-"
 "links\n"
-"POT-Creation-Date: 2014-11-06 02:35:09+00:00\n"
+"POT-Creation-Date: 2014-12-13 15:59:51+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,111 +13,111 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#: sem-external-links-admin.php:93
+#: sem-external-links-admin.php:109
 msgid "Settings saved."
 msgstr ""
 
-#: sem-external-links-admin.php:117
+#: sem-external-links-admin.php:133
 msgid ""
 "Note: Your rel=nofollow preferences is being ignored because the dofollow "
 "plugin is enabled on your site."
 msgstr ""
 
-#: sem-external-links-admin.php:122
+#: sem-external-links-admin.php:138
 msgid "External Links Settings"
 msgstr ""
 
-#: sem-external-links-admin.php:128
+#: sem-external-links-admin.php:144
 msgid "Apply Globally"
 msgstr ""
 
-#: sem-external-links-admin.php:136
+#: sem-external-links-admin.php:152
 msgid ""
 "Apply these settings to all outbound links on the site except those in "
 "scripts, styles and the html head section."
 msgstr ""
 
-#: sem-external-links-admin.php:143
+#: sem-external-links-admin.php:159
 msgid "Apply to Text Widgets"
 msgstr ""
 
-#: sem-external-links-admin.php:151
+#: sem-external-links-admin.php:167
 msgid ""
 "Apply these settings to any text widgets in addition to post, page and "
 "comments content."
 msgstr ""
 
-#: sem-external-links-admin.php:158
+#: sem-external-links-admin.php:174
 msgid "Treat Subdomains as Local"
 msgstr ""
 
-#: sem-external-links-admin.php:166
+#: sem-external-links-admin.php:182
 msgid "Treat any subdomains for this site as a local link."
 msgstr ""
 
-#: sem-external-links-admin.php:169
+#: sem-external-links-admin.php:185
 msgid ""
 "Example: If your site is at domain.com and you also have store.domain.com, "
 "any link to store.domain.com will be treated as local."
 msgstr ""
 
-#: sem-external-links-admin.php:175
+#: sem-external-links-admin.php:191
 msgid "Auto Convert Text Urls"
 msgstr ""
 
-#: sem-external-links-admin.php:183
+#: sem-external-links-admin.php:199
 msgid "Automatically converts text urls into clickable urls."
 msgstr ""
 
-#: sem-external-links-admin.php:186
+#: sem-external-links-admin.php:202
 msgid ""
 "Note: If this option is enabled then if www.example.com is found in your "
 "text, it will be converted to an html &lt;a&gt; link.\""
 msgstr ""
 
-#: sem-external-links-admin.php:188
+#: sem-external-links-admin.php:204
 msgid ""
 "This conversion will occur first so external link treatment for nofollow, "
 "icon and target will be applied to this auto links."
 msgstr ""
 
-#: sem-external-links-admin.php:194
+#: sem-external-links-admin.php:210
 msgid "Add No Follow"
 msgstr ""
 
-#: sem-external-links-admin.php:202
+#: sem-external-links-admin.php:218
 msgid "Add a rel=\"nofollow\" attribute to outbound links."
 msgstr ""
 
-#: sem-external-links-admin.php:205
+#: sem-external-links-admin.php:221
 msgid ""
 "Note: You can override this behavior by adding the attribute rel=\"follow\" "
 "to individual links."
 msgstr ""
 
-#: sem-external-links-admin.php:211
+#: sem-external-links-admin.php:227
 msgid "Add Icons"
 msgstr ""
 
-#: sem-external-links-admin.php:219
+#: sem-external-links-admin.php:235
 msgid "Mark outbound links with an icon."
 msgstr ""
 
-#: sem-external-links-admin.php:222
+#: sem-external-links-admin.php:238
 msgid ""
 "Note: You can override this behavior by adding a class=\"no_icon\" or "
 "\"noicon\" to individual links."
 msgstr ""
 
-#: sem-external-links-admin.php:228
+#: sem-external-links-admin.php:244
 msgid "Open in New Windows"
 msgstr ""
 
-#: sem-external-links-admin.php:236
+#: sem-external-links-admin.php:252
 msgid "Open outbound links in new windows."
 msgstr ""
 
-#: sem-external-links-admin.php:239
+#: sem-external-links-admin.php:255
 msgid ""
 "Note: Some usability experts discourage this, claiming that <a href=\"http://"
 "www.useit.com/alertbox/9605.html\">this can damage your visitors' trust</a> "
@@ -126,18 +126,37 @@ msgid ""
 "reason."
 msgstr ""
 
-#: sem-external-links-admin.php:247
+#: sem-external-links-admin.php:261
+msgid "Domains to Exclude"
+msgstr ""
+
+#: sem-external-links-admin.php:265
+msgid "External site domains that should be excluded from processing:"
+msgstr ""
+
+#: sem-external-links-admin.php:269
+msgid ""
+"Domains should be separated by a comma and entered as the base domain only. "
+"&nbsp;http://, https://, www. should not be included and will be stripped "
+"off."
+msgstr ""
+
+#: sem-external-links-admin.php:271
+msgid "Example: domain.com, domain.net, somesite.com, external.org."
+msgstr ""
+
+#: sem-external-links-admin.php:280
 msgid "Save Changes"
 msgstr ""
 
-#. #-#-#-#-#  sem-external-links.pot (External Links 6.1)  #-#-#-#-#
+#. #-#-#-#-#  sem-external-links.pot (External Links 6.4)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
-#: sem-external-links-info.php:2 sem-external-links.php:785
-#: sem-external-links.php:786
+#: sem-external-links-info.php:2 sem-external-links.php:835
+#: sem-external-links.php:836
 msgid "External Links"
 msgstr ""
 
-#. #-#-#-#-#  sem-external-links.pot (External Links 6.1)  #-#-#-#-#
+#. #-#-#-#-#  sem-external-links.pot (External Links 6.4)  #-#-#-#-#
 #. Description of the plugin/theme
 #: sem-external-links-info.php:3
 msgid ""
@@ -155,5 +174,5 @@ msgid "Denis de Bernardy & Mike Koepke"
 msgstr ""
 
 #. Author URI of the plugin/theme
-msgid "http://www.getsemiologic.com"
+msgid "https://www.semiologic.com"
 msgstr ""
