@@ -60,6 +60,13 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 == Change Log ==
 
+= 6.4.1 =
+
+- External Links with querystring not being excluded by Domains to Exclude
+- Ensure http/https are stripped off exclude domains in External Links admin
+- Fix wrong parameter count in strstr warning for sites using PHP 5.2 or earlier
+- Fix subdomain logic when the subdomain is also used in the tld - co.city.co.us
+
 = 6.4 =
 
 - New setting to specify domain(s) to be excluded from any processing.  props Brian Wilson

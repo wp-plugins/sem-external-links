@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.4
+Version: 6.4.1
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
 Text Domain: external-links
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.4');
+define('sem_external_links_version', '6.4.1');
 
 /**
  * external_links
@@ -640,8 +640,10 @@ class sem_external_links {
         if ($link_domain === false)
             return true;
         elseif (is_array($link_domain)) {
-            if (isset($link_domain['host']))
+            if (isset($link_domain['host'])) {
 		        $link_domain = $link_domain['host'];
+	            $link_domain = $this->remove_querystring( $link_domain );
+            }
             else
                 return false;
         }
@@ -659,7 +661,7 @@ class sem_external_links {
 		if ( $this->opts['subdomains_local'] ) {
 			$subdomains = $this->extract_subdomains($link_domain);
 			if ( $subdomains != '')
-				$link_domain = str_replace($subdomains . '.', '', $link_domain);
+				$link_domain = $this->str_replace_first($subdomains, '', $link_domain);
 		}
 
 		if ( $site_domain == $link_domain ) {
@@ -712,7 +714,7 @@ class sem_external_links {
 	    $subdomains = $domain;
 	    $domain = $this->extract_domain($subdomains);
 
-	    $subdomains = rtrim(strstr($subdomains, $domain, true), '.');
+		$subdomains = rtrim( substr($subdomains, 0, strpos($subdomains, $domain)) );
 
 	    return $subdomains;
 	} # extract_subdomains()
@@ -728,6 +730,27 @@ class sem_external_links {
 	    return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain_name) //valid chars check
 	            && preg_match("/^.{1,253}$/", $domain_name) //overall length check
 	            && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain_name)   ); //length of each label
+	}
+
+	/**
+	 * remove_querystring_var()
+	 *
+	 * @param string $url
+	 * @return string
+	 **/
+	function remove_querystring($url) {
+		$arr = explode("?", $url, 2);
+		$domain = $arr[0];
+
+		return $domain;
+	}
+
+	function str_replace_first($search, $replace, $subject) {
+	    $pos = strpos($subject, $search);
+	    if ($pos !== false) {
+	        $subject = substr_replace($subject, $replace, $pos, strlen($search));
+	    }
+	    return $subject;
 	}
 
 	/**
