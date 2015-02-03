@@ -3,7 +3,7 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.4.1
+Version: 6.5
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
 Text Domain: external-links
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.4.1');
+define('sem_external_links_version', '6.5');
 
 /**
  * external_links
@@ -30,6 +30,8 @@ define('sem_external_links_version', '6.4.1');
 class sem_external_links {
 
 	protected $opts;
+
+	protected $exclude_domains;
 
 	protected $anchor_utils;
 
@@ -111,6 +113,11 @@ class sem_external_links {
 		// more stuff: register actions and filters
 		$this->opts = sem_external_links::get_options();
 
+		$this->exclude_domains = array();
+		if ( isset($this->opts['exclude_domains']) ) {
+			$this->exclude_domains = preg_split("/[\s,]+/", $this->opts['exclude_domains']);
+		}
+
 		if ( !is_admin() ) {
 			$inc_text_widgets = false;
 			if ( isset( $this->opts['text_widgets'] ) && $this->opts['text_widgets'] )
@@ -174,7 +181,6 @@ class sem_external_links {
 	 **/
 
 	function process_content($text, $context = "global") {
-
 		// short circuit if there's no anchors at all in the text
 		if ( false === stripos($text, '<a ') )
 			return($text);
@@ -497,7 +503,7 @@ class sem_external_links {
 			$addthis = false;
 			foreach( $anchor['attr']['class'] as $c => $class) {
 				$pos = strpos( $class, "addthis_button" );
-				if ( null !== $pos ) {
+				if ( false !== $pos ) {
 					$addthis = true;
 					break;
 				}
@@ -651,10 +657,8 @@ class sem_external_links {
 		$link_domain = strtolower($link_domain);
 		$link_domain = str_replace('www.', '', $link_domain);
 
-		if ( isset($this->opts['exclude_domains']) ) {
-			$exclude_domains = explode( ',', $this->opts['exclude_domains'] );
-			$dom = $this->extract_domain($link_domain);
-			if ( in_array( $dom, $exclude_domains) )
+		if ( !empty($this->exclude_domains) ) {
+			if ( in_array( $link_domain, $this->exclude_domains) )
 				return false;
 		}
 
@@ -809,7 +813,7 @@ class sem_external_links {
 				$updated_opts['autolinks'] = true;
 		}
 
-		$o['version'] = sem_external_links_version;
+		$updated_opts['version'] = sem_external_links_version;
 
 		update_option('external_links', $updated_opts);
 

@@ -23,6 +23,7 @@ Under Settings / External Links, you can configure the plugin to:
 - Add rel=nofollow to the links. (Note: You can use a rel="follow" attribute on links to override this.)
 - Open outgoing links in new windows. Note that this can damage your visitor's trust towards your site in that they can think your site used a pop-under.
 - Turn on "autolinks" functionality.
+- Domains/subdomains you wish to Exclude from processing.
 
 
 = Auto Links =
@@ -59,6 +60,13 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 
 == Change Log ==
+
+= 6.5 =
+
+- Domains to Exclude no longer assumes subdomains meaning subdomains need to be specifically excluded now.
+- Entry of Domains to Exclude now allows separation by comma, space, newline/return, and tab.  It will convert into a csv list.
+- Fix placeholder links (href="#") not being excluded from processing correctly.
+- Fix Plugin version number not being updated in the database options correctly.
 
 = 6.4.1 =
 

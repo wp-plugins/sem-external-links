@@ -84,7 +84,7 @@ class external_links_admin {
 			$$var = isset($_POST[$var]);
 
 		$exclude_domains = stripslashes($_POST['exclude_domains']);
-		$domains = explode( ',', $exclude_domains );
+		$domains = preg_split("/[\s,]+/", $exclude_domains);
 		$exclude_domains = array();
 
 		global $sem_external_links;
@@ -93,13 +93,13 @@ class external_links_admin {
 			$domain = str_replace('http://', '', $domain);
 			$domain = str_replace('https://', '', $domain);
 			if (  $sem_external_links->is_valid_domain_name($domain)) {
-				$domain = $sem_external_links->extract_domain( $domain );
+				$domain = str_replace('www.', '', $domain);
 				if ( !in_array( $domain, $exclude_domains) )
 					$exclude_domains[] = $domain;
 			}
 		}
 
-		$exclude_domains = implode( ',', $exclude_domains );
+		$exclude_domains = implode( ', ', $exclude_domains );
 
 		$version = sem_external_links_version;
 		update_option('external_links', compact('global', 'icon', 'target', 'nofollow', 'text_widgets',
@@ -268,9 +268,9 @@ class external_links_admin {
 			. '<textarea name="exclude_domains" cols="58" rows="4" class="widefat">'
 			. esc_html($options['exclude_domains'])
 			. '</textarea>' . "\n"
-			. __('Domains should be separated by a comma and entered as the base domain only. &nbsp;http://, https://, www. should not be included and will be stripped off.', 'external-links')
+			. __('Domains and subdomains should be separated by a comma, space or carriage return. &nbsp;http://, https://, www. should not be included and will be stripped off.', 'external-links')
 			. '</label>&nbsp;&nbsp;'
-			. '<i>' .__('Example: domain.com, domain.net, somesite.com, external.org.', 'external-links') . '</i>'
+			. '<i>' .__('Example: domain.com, domain.net, sub.domain.com, somesite.com, external.org.', 'external-links') . '</i>'
 			. '<br />' . "\n"
 			. '</td>'
 			. '</tr>' . "\n";
