@@ -79,11 +79,16 @@ class sem_autolink_uri {
 	 **/
 
 	function init() {
+
+		$opts = sem_external_links::get_options();
+
 		// more stuff: register actions and filters
         // after shortcodes
+
         add_filter('the_content', array($this, 'filter'), 12);
         add_filter('the_excerpt', array($this, 'filter'), 12);
-	    add_filter('widget_text', array($this, 'filter'), 12);
+		if ( isset( $opts['text_widgets'] ) && $opts['text_widgets'] )
+	        add_filter('widget_text', array($this, 'filter'), 12);
 	}
 
     /**
@@ -94,6 +99,10 @@ class sem_autolink_uri {
 	 **/
 
 	function filter($text) {
+
+		if ( empty( $text ) )
+			return $text;
+
 		global $escape_autolink_uri;
 		
 		$escape_autolink_uri = array();
@@ -168,7 +177,7 @@ class sem_autolink_uri {
 				<\s*\/\s*head\s*>
 				/isx",
 			'blocks' => "/
-				<\s*(script|style|object|textarea|code|pre)(?:\s.*?)?>
+				<\s*(script|style|object|code|pre|textarea)(?:\s.*?)?>
 				.*?
 				<\s*\/\s*\\1\s*>
 				/isx",
@@ -176,19 +185,21 @@ class sem_autolink_uri {
 				\[.+?\]
 				/x",
 			'anchors' => "/
-				<\s*a\s.+?>.+?<\s*\/\s*a\s*>
+				<a .*?>.*?<\/a>
 				/isx",
 			'tags' => "/
-				<[^<>]+?(?:src|href|codebase|archive|usemap|data|value|action|background|placeholder)=[^<>]+?>
+				<[^<>]+?(?:src|href|codebase|archive|usemap|data|value|action|background|placeholder|onclick)=[^<>]+?>
 				/ix",
 			) as $regex ) {
-			$text = preg_replace_callback($regex, array($this, 'escape_callback'), $text);
+			$t = preg_replace_callback($regex, array($this, 'escape_callback'), $text);
+			if ( $t !== NULL )
+				$text = $t;
 		}
-		
+
 		return $text;
 	} # escape()
-	
-	
+
+
 	/**
 	 * escape_callback()
 	 *

@@ -1,9 +1,9 @@
 === External Links ===
 Contributors: Denis-de-Bernardy, Mike_Koepke
-Donate link: http://www.semiologic.com/partners/
+Donate link: https://www.semiologic.com/donate/
 Tags: external-links, nofollow, link-target, link-icon, semiologic
 Requires at least: 2.8
-Tested up to: 4.1
+Tested up to: 4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,9 +41,7 @@ After:
 
 = Help Me! =
 
-The [Semiologic forum](http://forum.semiologic.com) is the best place to report issues. Please note, however, that while community members and I do our best to answer all queries, we're assisting you on a voluntary basis.
-
-If you require more dedicated assistance, consider using [Semiologic Pro](http://www.semiologic.com).
+The [Plugin's Forum](https://wordpress.org/support/plugin/sem-external-links) is the best place to report issues.
 
 
 == Installation ==
@@ -60,6 +58,24 @@ The plugin supports a non-started rel="follow" attribute on links to override th
 
 
 == Change Log ==
+
+= 6.7 =
+
+- Fix: Some links with affiliate code may not be correctly detected as an external link.
+- Fix: Auto Convert Text Urls were being applied to Text Widgets regardless of Settings
+- Fix: A lengthy page or long embedded form could cause Auto Convert Text URLS to fail and result in some blanking of the text.
+- Change: Site domain entered in the 'Domains To Exclude' with a trailing slash is handled better and trailing slash is simply removed.
+
+= 6.6 =
+
+- New option to exclude html code blocks (pre and code) from link processing
+- Updated the text-domain to sem-external-links to match plugin's slug to support internationalization efforts
+
+= 6.5.1 =
+
+- No functionality changes in this release.
+- WP 4.3 compat
+- Tested against PHP 5.6
 
 = 6.5 =
 

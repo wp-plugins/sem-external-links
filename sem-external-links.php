@@ -3,10 +3,10 @@
 Plugin Name: External Links
 Plugin URI: http://www.semiologic.com/software/external-links/
 Description: Marks outbound links as such, with various effects that are configurable under <a href="options-general.php?page=external-links">Settings / External Links</a>.
-Version: 6.5
+Version: 6.7
 Author: Denis de Bernardy & Mike Koepke
 Author URI: https://www.semiologic.com
-Text Domain: external-links
+Text Domain: sem-external-links
 Domain Path: /lang
 License: Dual licensed under the MIT and GPLv2 licenses
 */
@@ -19,7 +19,7 @@ This software is copyright Denis de Bernardy & Mike Koepke, and is distributed u
 
 **/
 
-define('sem_external_links_version', '6.5');
+define('sem_external_links_version', '6.6');
 
 /**
  * external_links
@@ -97,7 +97,7 @@ class sem_external_links {
     public function __construct() {
 	    $this->plugin_url    = plugins_url( '/', __FILE__ );
         $this->plugin_path   = plugin_dir_path( __FILE__ );
-        $this->load_language( 'external-links' );
+        $this->load_language( 'sem-external-links' );
 
 	    add_action( 'plugins_loaded', array ( $this, 'init' ) );
     }
@@ -285,14 +285,20 @@ class sem_external_links {
 
 		$exclusions = array();
 
-		if ( $context == 'global' )
+		if ( $context == 'global' ) {
 			$exclusions['head'] = "/
 							.*?
 							<\s*\/\s*head\s*>
 							/isx";
+		}
+
+		$ignore_blocks = 'script|style|object|textarea';
+		if ( $this->opts['exclude_code_blocks'] ) {
+			$ignore_blocks .= '|pre|code';
+		}
 
 		$exclusions['blocks'] = "/
-						<\s*(script|style|object|textarea)(?:\s.*?)?>
+						<\s*(" . $ignore_blocks . ")(?:\s.*?)?>
 						.*?
 						<\s*\/\s*\\1\s*>
 						/isx";
@@ -377,7 +383,7 @@ class sem_external_links {
 		$anchor['attr'] = $this->parseAttributes( $match[1] );
 
 		if ( !is_array($anchor['attr']) || empty($anchor['attr']['href']) # parser error or no link
-			|| trim($anchor['attr']['href']) != esc_url($anchor['attr']['href'], null, 'db') ) # likely a script
+		|| trim($anchor['attr']['href']) != esc_attr($anchor['attr']['href'], null, 'db') ) # likely a script
 			return false;
 
 		foreach ( array('class', 'rel') as $attr ) {
@@ -800,6 +806,7 @@ class sem_external_links {
 					'subdomains_local' => true,
 					'version' => sem_external_links_version,
 					'exclude_domains' => '',
+					'exclude_code_blocks' => false,
 					);
 
 		if ( !$o )
@@ -859,8 +866,8 @@ class sem_external_links {
 	
 	function admin_menu() {
 		add_options_page(
-			__('External Links', 'external-links'),
-			__('External Links', 'external-links'),
+			__('External Links', 'sem-external-links'),
+			__('External Links', 'sem-external-links'),
 			'manage_options',
 			'external-links',
 			array('external_links_admin', 'edit_options')
